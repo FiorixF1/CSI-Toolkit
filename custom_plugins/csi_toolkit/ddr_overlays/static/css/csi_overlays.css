@@ -1,0 +1,541 @@
+
+@font-face {
+    font-family: 'BebasNeue'; /* Nome del font che userai in CSS */
+    src: url('/csi_toolkit/ddr_overlays/static/fonts/csi/BebasNeue-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+
+/* NEXT UP - LAST HEAT */ 
+
+#ddr_nextup {
+    background-color: transparent;
+    color: white;
+}
+
+.container-figurina {
+    display: flex;
+    place-content: center;
+    max-width: 255px;
+    height: 330px;
+    justify-self: center;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, black 100%);
+                border: 5px solid transparent; /* Transparent border to be replaced */
+                border-image: linear-gradient(to right, #b8b8b8, #e0e0e0, #b8b8b8);
+                border-image-slice: 1;
+}
+
+.bottom-container {
+    background-image: url(/csi_toolkit/ddr_overlays/static/imgs/pilot-container.png?version=x);
+    background-position: center;
+    background-size: contain;
+    display: flex;
+    width: 326px;
+    min-height: 77px;
+    margin-top:-21px;
+    position: relative;
+    z-index: 99;
+}
+
+.nextup_flag {
+    min-width: 68px;
+}
+
+.nextup_flag img {
+    width: 69px;
+    filter: drop-shadow(0px 0px 4px red) 
+            drop-shadow(0px 0px 5px black);
+}
+
+.center-pilot-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 26px;
+    gap: 0px;
+}
+
+.nextup_pilot_title {
+    text-align: center;
+    font-size: 29px;
+    font-family: BebasNeue;
+    width: 189px;
+    align-content: center;
+    margin-top: -13px;
+}
+
+.container-team {
+    font-family: 'BebasNeue';
+    margin-top: -6px;
+}
+
+.team-logo {
+    min-width: 48px;
+    padding-top: 5px;
+    margin-left: -3px;
+}
+
+.team-logo img {
+    width: 67px;
+    filter: drop-shadow(0px 0px 4px red) 
+            drop-shadow(0px 0px 5px black);
+}
+
+img#raceImage {
+    max-width: 300px;
+    justify-self: center;
+}
+
+
+
+/* LAST HEAT */
+
+#ddr_nextup #nextup_title {
+    font-size: 56px;
+    font-weight: 800;
+    /* color: #013e77; */
+    padding: 0px;
+    text-align: center;
+    font-family: 'BebasNeue';
+    text-transform: uppercase;
+}
+
+.csi-event-title {
+    font-family: 'BebasNeue';
+    justify-self: center;
+    text-align: center;
+    font-size: 25px;
+}
+
+.bracket-img {
+    width: 50px;
+    height: 50px;
+    margin-left: 5px;
+    vertical-align: middle;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.5s ease-in-out;
+}
+
+.bracket-img.zoom-in {
+    opacity: 1;
+    transform: scale(1);
+}
+
+#ddr_nextup .nextup_pilot_position {
+    width: 100%;
+    text-align: center;
+    font-size: 42px;
+    margin-bottom: 8px;
+    font-family: 'BebasNeue';
+}
+
+#lower-cell {
+    padding-right: 0px;
+    padding-left: 0ppx;
+    margin-right: -120px;
+}
+
+#winner-cell {
+    padding-left: 0px;
+}
+
+
+
+/* QUALIFYING RANKING */
+
+table.leaderboard {
+    width: 1200px;
+    min-width: 100px;
+    background: transparent;
+}
+
+thead {
+    background: #ca0f0f;
+}
+
+#ddr_leaderboard32 td, #ddr_leaderboard32 th {
+    border: 0px;
+    font-size: 36px;
+    text-align: center;
+    padding-left: 32px;
+}
+
+tr[id^="pilot_id_"] {
+    background-image: url(/csi_toolkit/ddr_overlays/static/imgs/bg-qual.png?version=x);
+    color: white;
+    background-position: center;
+    background-size: cover;
+}
+
+thead th {
+    height: 1.2em;
+    vertical-align: middle!important;
+    color: white;
+}
+
+th.fast {
+    padding-right: 60px;
+}
+
+td.fast {
+    padding-right: 40px;
+    color: #00ff00;
+    font-weight: 600;
+}
+
+#ddr_leaderboard32  td.pos {
+    font-size: 48px;
+    font-weight: 800;
+    padding-top: 10px;
+    width: 40px;
+}
+
+td.pilot {
+    font-family: 'BebasNeue';
+    padding-top: 16px;
+    width: 15%;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+td.team {
+    padding-right: 0px;
+    color: #000000;
+    font-weight: 600;
+    font-family: 'BebasNeue';
+    font-size: 26px!important;
+    text-align: center;
+    width: 23%;
+    padding-left: 105px;
+}
+
+td.consecutive {
+    color: #00ff00;
+    font-family: 'BebasNeue';
+}
+
+#ddr_leaderboard32 .flag {
+    float: unset!important;
+    place-self: center;
+    margin-top: 30px;
+    padding-left: 45px;
+}
+
+#ddr_leaderboard32 .avatar {
+    width: 93px;
+    height: 87px;
+}
+
+#ddr_leaderboard32 .avatar img {
+    width: 120%;
+    height: 116%;
+    object-fit: cover;
+    object-position: top;
+    margin-top: -10px;
+}
+
+#ddr_leaderboard32 td.pilot {
+    padding-top: 16px;
+    width: 260px;
+    text-align: center;
+}
+
+
+
+/* NODE CSS */
+#ddr_node #node_info_bar {
+    font-family: 'BebasNeue'; 
+    background-image: url(/csi_toolkit/ddr_overlays/static/imgs/nodebg.png?version=x);
+    background-size: contain;
+    border: 0px;
+}
+
+#ddr_node #node_info_bar #node_callsign {
+    font-size: 40px;
+    font-weight: 200;
+    padding: 14px 0 0 12px;
+    font-family: 'BebasNeue';
+    text-transform: none;
+    line-height: 1;
+}
+
+div#node_avatars {
+    position: absolute;
+    bottom: 0px;
+    z-index: 99;
+}
+
+div#node-avatar-container {
+    height: 180px;
+    overflow: hidden;
+}
+
+div#node-avatar-container img {
+    height: 286px;
+}
+
+#ddr_node #node_info_bar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -15px;
+    height: 15px; /* Altezza del bordo */
+    width: 100%;
+    background: linear-gradient(to right, #8B0000, red, #8B0000);
+    border-radius: 3px; /* Optional: angoli leggermente arrotondati */
+}
+
+#ddr_node #node_info_bar #node_flag {
+    width: 42px;
+    height: 24px;
+    font-size: 24px;
+    font-weight: 200;
+    padding: 16px 27px 0 30px;
+}
+
+#ddr_node #node_info_bar #node_flag {
+    width: 42px;
+    height: 24px;
+    font-size: 24px;
+    font-weight: 200;
+    padding: 16px 27px 0 30px;
+}
+
+#ddr_node #node_position {
+    background-color: #449cd2;
+    border-radius: 32%;
+}
+
+#ddr_node #node_position #node_pos {
+    font-family: 'BebasNeue';
+}
+
+#ddr_node #node_info_bar #node_flag {
+    width: 42px;
+    height: 43px;
+    font-size: 24px;
+    font-weight: 200;
+    padding: 8px 27px 0 30px;
+}
+
+/* LEADERBOARD BAR HORIZONTAL */
+.leaderboard-horizontal {
+    display: flex;
+    gap: 30px;
+    justify-content: flex-start;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    background: #000000b8;
+    padding: 6px 15px;
+    align-items: center;
+}
+
+.lbh-race-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    margin-right: 10px;
+}
+
+.lbh-race-title {
+    font-size: 2.5em;
+    font-weight: bold;
+}
+
+.lbh-race-time {
+    font-size: 0.8em;
+    color: #fff;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.lbh-racetime {
+    font-size: 20px;
+    color: #00ff00;
+}
+
+.lbh-pilot-container-center {
+    display: flex;
+    gap: 20px;
+}
+
+.lbh-driver-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.lbh-driver {
+    background: #222;
+    border-radius: 8px;
+    width: 134px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-top: 4px solid #ff0000;
+    padding-left: 10px;
+}
+
+.lbh-driver-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.lbh-position {
+    font-weight: bold;
+    font-size: 1.2em;
+    width: 6px;
+}
+
+.lbh-image {
+    width: 43px;
+    height: 44px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.lbh-image img {
+    height: 70px;
+}
+
+.lbh-name {
+    font-size: 0.95em;
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lbh-info-row {
+    display: flex;
+    justify-content: end;
+    width: 139px;
+    margin-top: 1px;
+}
+
+.lbh-lap-time-box, .lbh-gap-box {
+    font-size: 0.75em;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
+.lbh-lap-time-box {
+    background: #444;
+    color: white;
+}
+
+.lbh-gap-box {
+    background: #00cc00;
+    color: black;
+}
+
+.lbh-event-title {
+    width: 215px;
+    font-size: 21px;
+    text-align: center;
+}
+
+
+
+/* BRACKET */
+.bracket_race_pilots {
+    min-width: 200px;
+    white-space: nowrap;
+    background: #000000ab;
+    color: white;
+    font-family: 'bebasneue';
+}
+
+.bracket_race_title {
+    font-family: 'bebasneue';
+    font-size: 22px;
+    font-weight: 200;
+    padding: 4px;
+    text-align: center;
+    background-color: #00c3f1 !important;
+    color: #fff;
+}
+
+.bracket_race_pilot {
+    border-top: 1px solid #ffffff!important;
+    padding: 5px 12px;
+    font-size: 18px;
+    line-height: 1;
+    height: 28px;
+}
+
+.bracket_race_pilot .avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 0px!important;
+    overflow: hidden;
+    margin: 2px 6px 2px 0px;
+}
+
+.bracket_race {
+    border: 0px solid #013e77!important;
+}
+
+.bracket_group_title {
+    font-size: 32px;
+    margin-bottom: 20px;
+    display: flex!important;
+    background: white;
+    color: green;
+    display: flex;
+    place-content: center!important;
+    justify-self: center!important;
+    font-family: 'BebasNeue';
+    font-weight: 700;
+    padding: 0px 20px;
+    border-radius: 6px;
+}
+
+.bracket_group_title_redemption {
+    font-size: 32px;
+    margin-bottom: 20px;
+    display: flex!important;
+    background: orange;
+    display: flex;
+    place-content: center!important;
+    justify-self: center!important;
+    font-family: 'BebasNeue';
+    font-weight: 700;
+    padding: 0px 20px;
+    border-radius: 6px;
+}
+
+.bracket_race_pilot .no_pilot {
+    color: #c2c2c2!important;
+}
+
+#loser_bracket_content .bracket_race_title {
+    font-size: 22px;
+    font-weight: 200;
+    padding: 4px;
+    text-align: center;
+    background-color: #ffa500!important;
+    color: black;
+    font-family: 'bebasneue';
+}
+
+div#bracket_column_1 .bracket_race_title {
+    background: green!important;
+}
+
+div#bracket_column_2 .bracket_race_title {
+    background: green!important;
+}
+
+div#bracket_column_3 .bracket_race_title {
+    background:#ae0707 !important;
+}

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="RotorHazard">
+    <meta name="google" content="notranslate">
+    <title>Stream Top Bar - {{ getOption("timerName") }}</title>
+
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/image/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/image/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/image/favicon-16x16.png">
+    <link rel="manifest" href="/static/image/site.webmanifest">
+    <link rel="mask-icon" href="/static/image/safari-pinned-tab.svg" color="#ee7a28">
+    <link rel="shortcut icon" href="/static/image/favicon.ico">
+    <meta name="msapplication-TileColor" content="#ee7a28">
+    <meta name="msapplication-config" content="/static/image/browserconfig.xml">
+    <meta name="theme-color" content="#224873">
+
+    <!-- Scripts -->
+    <script type="text/javascript" src="/static/jquery-3.6.4/jquery-3.6.4.min.js"></script>
+    <script type="text/javascript" src="/static/articulate/articulate.min.js"></script>
+    <script type="text/javascript" src="/static/socket.io-4.6.1/socket.io.min.js"></script>
+    <script type="text/javascript" src="/static/smoothie/smoothie.js"></script>
+    <script type="text/javascript" src="/static/magnific-1.1.0/magnific-inline-min.js"></script>
+    <script type="text/javascript" src="/static/svgasset.js"></script>
+    <script type="text/javascript" src="/static/rotorhazard.js"></script>
+
+    <style>
+@font-face {
+    font-family: 'BebasNeue'; /* Nome del font che userai in CSS */
+    src: url('/csi_toolkit/ddr_overlays/static/fonts/csi/BebasNeue-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: 'BebasNeue';
+}
+
+.logocsi {
+    justify-self: center;
+}
+
+.logocsi img {
+    width: 77px;
+}
+
+.leaderboard {
+    width: 210px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 8px;
+    color: white;
+}
+
+.leaderboard h3 {
+    text-align: center;
+    margin: 0 0 10px 0;
+    font-size: 1.2em;
+    border-bottom: 2px solid red;
+    padding-bottom: 5px;
+}
+
+.driver {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    background-color:black;
+    border-left: 4px solid #ff0000; /* colore team */
+    border-radius: 4px;
+}
+
+.position {
+    font-weight: bold;
+    width: 13px;
+}
+
+.name {
+    font-size: 1em;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.team-logo {
+    width: 44px;
+}
+
+.team-logo img {
+    object-fit: cover;
+    height: 31px;
+}
+
+.gap {
+    font-size: 0.9em;
+    text-align: right;
+    flex: 1;
+    margin-left: 10px;
+}
+    </style>
+</head>
+<body>
+
+<script type="text/javascript" charset="utf-8" src="/csi_toolkit/ddr_overlays/static/js/ddr_overlays.js"></script>
+
+<script type="text/javascript" charset="utf-8">
+
+    var data_dependencies = [
+        'all_languages',
+        'language',
+        'leaderboard',
+        'race_status',
+    ];
+
+    rotorhazard.show_messages = false;
+
+    var current_pilots = new Set();
+
+    function race_kickoff(msg) {
+        rotorhazard.timer.stopAll();
+
+        var staging_start_pi = (msg.pi_staging_at_s * 1000); // convert seconds (pi) to millis (JS)
+        var race_start_pi = (msg.pi_starts_at_s * 1000); // convert seconds (pi) to millis (JS)
+
+        rotorhazard.timer.race.hidden_staging = Boolean(msg.hide_stage_timer);
+        rotorhazard.timer.race.count_up = Boolean(msg.race_mode);
+        rotorhazard.timer.race.duration_tenths = msg.race_time_sec * 10;
+
+        rotorhazard.timer.race.start(race_start_pi, staging_start_pi);
+    }
+
+    $(document).ready(function () {
+        // get pi time
+        rotorhazard.pi_time_request = window.performance.now();
+        socket.emit('get_pi_time');
+
+        socket.on('pi_time', default_handler['pi_time']);
+
+        socket.on('language', default_handler['language']);
+
+        socket.on('race_scheduled', default_handler['race_scheduled']);
+
+        socket.on('race_status', default_handler['race_status']);
+
+        socket.on('heartbeat', default_handler['heartbeat']);
+
+        socket.on('leaderboard', function (msg) {
+            if (msg && 'last_race' in msg) {
+                var race = msg.last_race;
+            } else {
+                var race = msg.current;
+            }
+
+            var heatname = __('Heat') + ' ' + race.heat;
+            if (race.displayname) {
+                heatname = race.displayname;
+            }
+
+            $('.curr_heat_Title').html(heatname);
+
+            var leaderboard_type = race.leaderboard.meta.primary_leaderboard;
+            var leaderboard = race.leaderboard[leaderboard_type];
+
+            var new_current_pilots = new Set();
+            var pilot_cache = {};
+            for (var i in leaderboard) {
+                leaderboard[i].position = +i+1; // pilot.position is null until the pilot has completed at least one lap, here we make sure it is a valid number
+                new_current_pilots.add(leaderboard[i].pilot_id);
+                pilot_cache[leaderboard[i].callsign] = leaderboard[i];
+            }
+
+            if (!setsAreEqual(current_pilots, new_current_pilots)) {
+                // pilots have changed, redraw everything
+                $('#the_leaderboard').empty();
+                for (var i in leaderboard) {
+                    var pilot = leaderboard[i];
+                    var pilot_id = pilot.pilot_id;
+                    var pilot_callsign = pilot.callsign;
+                    var pilot_position = +i+1; // pilot.position is null until a pilot has completed at least one lap
+                    var pilot_team_url = getTeamImgURL(pilot);
+
+                    var pilot_gap_ms = pilot.time_behind_raw ? Math.round(pilot.time_behind_raw) : 0;
+                    var gap_minutes = Math.floor(pilot_gap_ms / 60000);
+                    var gap_seconds = Math.floor(pilot_gap_ms / 1000) % 60;
+                    var gap_milliseconds = pilot_gap_ms % 1000;
+                    var printable_gap = (pilot_gap_ms != 0) ?
+                        +gap_seconds + "." + gap_milliseconds :
+                        "---"; // mostra solo i secondi senza leading zero
+
+                    var html = "<div class='driver'>" +
+                                 "<div class='position'>" + pilot_position + "</div>" +
+                                 "<div class='team-logo'><img src='" + pilot_team_url + "'></div>" +
+                                 "<div class='name'>" + pilot_callsign + "</div>" +
+                                 "<div class='gap'>" + printable_gap + "</div>" +
+                               "</div>"
+                    $("#the_leaderboard").append(html);
+                }
+            } else {
+                // pilots have not changed, just update values and ordering
+                $(".driver").each(function() {
+                    const pilot_callsign = $(this).find(".name").text().trim();
+                    const pilot = pilot_cache[pilot_callsign];
+                    
+                    var pilot_gap_ms = pilot.time_behind_raw ? Math.round(pilot.time_behind_raw) : 0;
+                    var gap_minutes = Math.floor(pilot_gap_ms / 60000);
+                    var gap_seconds = Math.floor(pilot_gap_ms / 1000) % 60;
+                    var gap_milliseconds = pilot_gap_ms % 1000;
+                    var printable_gap = (pilot_gap_ms != 0) ?
+                        +gap_seconds + "." + gap_milliseconds :
+                        "---"; // mostra solo i secondi senza leading zero
+                    
+                    // update values
+                    $(this).find(".position").text(pilot_position);
+                    $(this).find(".gap").text(printable_gap);
+                });
+                
+                // update order according to new positions
+                const the_leaderboard = $("#the_leaderboard");
+
+                const pilots = the_leaderboard.children(".driver").sort((a, b) => {
+                    const posA = parseInt($(a).find(".position").text(), 10);
+                    const posB = parseInt($(b).find(".position").text(), 10);
+                    return posA - posB;
+                });
+
+                the_leaderboard.append(pilots);
+            }
+            
+            $('#team_leaderboard').empty();
+            if (race.team_leaderboard && 'meta' in race.team_leaderboard) {
+                leaderboard_type = race.team_leaderboard.meta.primary_leaderboard;
+                $('#team_leaderboard').append(build_team_leaderboard(race.team_leaderboard[leaderboard_type], leaderboard_type, race.team_leaderboard.meta));
+                $('#team_leaderboard').show();
+            } else {
+                $('#team_leaderboard').hide();
+            }
+
+            if (race.status_msg) {
+                $('.race_status_message').html(race.status_msg);
+                $('.race_status_message').slideDown();
+            } else {
+                $('.race_status_message').slideUp();
+            }
+        });
+
+        socket.on('prestage_ready', default_handler['prestage_ready']);
+
+        socket.on('stage_ready', default_handler['stage_ready']);
+
+        socket.on('stop_timer', default_handler['stop_timer']);
+
+    });
+
+</script>
+
+    <div class="leaderboard">
+    <div class="logocsi"><img src="/csi_toolkit/ddr_overlays/static/imgs/csilogo.png"></div>
+    <h3>LIVE STANDINGS</h3>
+
+    <div id="the_leaderboard">
+        <div class="driver">
+            <div class="position">1</div>
+            <div class="team-logo"><img src="team_blackfrog.png"></div>
+            <div class="name">Fiorix</div>
+            <div class="gap">+0.000</div>
+        </div>
+        <div class="driver">
+            <div class="position">2</div>
+            <div class="team-logo"><img src="team_blackfrog.png"></div>
+            <div class="name">Geek</div>
+            <div class="gap">+1.245</div>
+        </div>
+        <div class="driver">
+            <div class="position">3</div>
+            <div class="team-logo"><img src="team_gace.png"></div>
+            <div class="name">Finz</div>
+            <div class="gap">+2.367</div>
+        </div>
+        <div class="driver">
+            <div class="position">4</div>
+            <div class="team-logo"><img src="drf_reparto_corse.png"></div>
+            <div class="name">Difo</div>
+            <div class="gap">+3.501</div>
+        </div>
+    </div>
+  </div>
+
+</body>
+</html>

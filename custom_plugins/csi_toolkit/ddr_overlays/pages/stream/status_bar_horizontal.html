@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="RotorHazard">
+    <meta name="google" content="notranslate">
+    <title>Stream Top Bar - {{ getOption("timerName") }}</title>
+
+    <!-- Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/image/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/image/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/image/favicon-16x16.png">
+    <link rel="manifest" href="/static/image/site.webmanifest">
+    <link rel="mask-icon" href="/static/image/safari-pinned-tab.svg" color="#ee7a28">
+    <link rel="shortcut icon" href="/static/image/favicon.ico">
+    <meta name="msapplication-TileColor" content="#ee7a28">
+    <meta name="msapplication-config" content="/static/image/browserconfig.xml">
+    <meta name="theme-color" content="#224873">
+
+    <!-- Scripts -->
+    <script type="text/javascript" src="/static/jquery-3.6.4/jquery-3.6.4.min.js"></script>
+    <script type="text/javascript" src="/static/articulate/articulate.min.js"></script>
+    <script type="text/javascript" src="/static/socket.io-4.6.1/socket.io.min.js"></script>
+    <script type="text/javascript" src="/static/smoothie/smoothie.js"></script>
+    <script type="text/javascript" src="/static/magnific-1.1.0/magnific-inline-min.js"></script>
+    <script type="text/javascript" src="/static/svgasset.js"></script>
+    <script type="text/javascript" src="/static/rotorhazard.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/magnific-1.1.0/magnific-popup.css"></link>
+    <link rel="stylesheet" href="/static/stream.css"></link>
+    <link rel="stylesheet" href="/csi_toolkit/ddr_overlays/static/fonts/teko/stylesheet.css"></link>
+    <link rel="stylesheet" href="/csi_toolkit/ddr_overlays/static/css/ddr_overlays.css?ver=1.0"></link>
+    <link rel="stylesheet" href="/csi_toolkit/ddr_overlays/static/css/csi_overlays.css?ver=1.0"></link>
+
+    <!-- Child template head content -->
+
+</head>
+
+<style>
+@font-face {
+    font-family: 'BebasNeue'; /* Nome del font che userai in CSS */
+    src: url('/csi_toolkit/ddr_overlays/static/fonts/csi/BebasNeue-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    background: transparent;
+    font-family: BebasNeue;
+    color: white;
+    font-weight: 100;
+}
+</style>
+
+</head>
+<body>
+
+<script type="text/javascript" charset="utf-8" src="/csi_toolkit/ddr_overlays/static/js/ddr_overlays.js"></script>
+
+<script type="text/javascript" charset="utf-8">
+
+    var data_dependencies = [
+        'all_languages',
+        'language',
+        'leaderboard',
+        'race_status',
+    ];
+
+    rotorhazard.show_messages = false;
+
+    var current_pilots = new Set();
+
+    function race_kickoff(msg) {
+        rotorhazard.timer.stopAll();
+
+        var staging_start_pi = (msg.pi_staging_at_s * 1000); // convert seconds (pi) to millis (JS)
+        var race_start_pi = (msg.pi_starts_at_s * 1000); // convert seconds (pi) to millis (JS)
+
+        rotorhazard.timer.race.hidden_staging = Boolean(msg.hide_stage_timer);
+        rotorhazard.timer.race.count_up = Boolean(msg.race_mode);
+        rotorhazard.timer.race.duration_tenths = msg.race_time_sec * 10;
+
+        rotorhazard.timer.race.start(race_start_pi, staging_start_pi);
+    }
+
+    $(document).ready(function () {
+        // get pi time
+        rotorhazard.pi_time_request = window.performance.now();
+        socket.emit('get_pi_time');
+
+        socket.on('pi_time', default_handler['pi_time']);
+
+        socket.on('language', default_handler['language']);
+
+        socket.on('race_scheduled', default_handler['race_scheduled']);
+
+        socket.on('race_status', default_handler['race_status']);
+
+        socket.on('heartbeat', default_handler['heartbeat']);
+
+        socket.on('leaderboard', function (msg) {
+            if (msg && 'last_race' in msg) {
+                var race = msg.last_race;
+            } else {
+                var race = msg.current;
+            }
+
+            var heatname = __('Heat') + ' ' + race.heat;
+            if (race.displayname) {
+                heatname = race.displayname;
+            }
+
+            $('.lbh-race-title').html(heatname.toUpperCase());
+
+            var leaderboard_type = race.leaderboard.meta.primary_leaderboard;
+            var leaderboard = race.leaderboard[leaderboard_type];
+
+            var new_current_pilots = new Set();
+            var pilot_cache = {};
+            for (var i in leaderboard) {
+                leaderboard[i].position = +i+1; // pilot.position is null until the pilot has completed at least one lap, here we make sure it is a valid number
+                new_current_pilots.add(leaderboard[i].pilot_id);
+                pilot_cache[leaderboard[i].callsign] = leaderboard[i];
+            }
+            
+            if (!setsAreEqual(current_pilots, new_current_pilots)) {
+                // pilots have changed, redraw everything
+                $(".lbh-pilot-container-center").empty();
+                for (var i in leaderboard) {
+                    var pilot = leaderboard[i];
+                    var pilot_id = pilot.pilot_id;
+                    var pilot_callsign = pilot.callsign;
+                    var pilot_position = pilot.position;
+                    var pilot_image_url = getPilotImgURL(pilot);
+
+                    var pilot_last_lap_ms = pilot.last_lap_raw ? Math.round(pilot.last_lap_raw) : 0;
+                    var lap_minutes = Math.floor(pilot_last_lap_ms / 60000);
+                    var lap_seconds = Math.floor(pilot_last_lap_ms / 1000) % 60;
+                    var lap_milliseconds = pilot_last_lap_ms % 1000;
+                    var printable_lap = (pilot_last_lap_ms != 0) ?
+                        +lap_seconds + "." + lap_milliseconds :
+                        "---"; // mostra solo i secondi senza leading zero
+
+                    var html = "<div class='lbh-driver-wrapper'>" +
+                                 "<div class='lbh-driver'>" +
+                                   "<div class='lbh-driver-top'>" +
+                                    "<div class='lbh-position'>" + pilot_position + "</div>" +
+                                    "<div class='lbh-image'><img src='" + pilot_image_url +"'></div>" +
+                                    "<div class='lbh-name'>" + pilot_callsign + "</div>" +
+                                   "</div>" +
+                                 "</div>" +
+                                 "<div class='lbh-info-row'>" +
+                                   "<div class='lbh-lap-time-box'>Lap Time</div>" +
+                                   "<div class='lbh-gap-box'>" + printable_lap + "</div>" +
+                                 "</div>" +
+                               "</div>";
+                    $(".lbh-pilot-container-center").append(html);
+                }
+                current_pilots = new Set(new_current_pilots);
+            } else {
+                // pilots have not changed, just update values and ordering
+                $(".lbh-driver-wrapper").each(function() {
+                    const pilot_callsign = $(this).find(".lbh-name").text().trim();
+                    const pilot = pilot_cache[pilot_callsign];
+                    
+                    var pilot_position = pilot.position;
+                    var pilot_last_lap_ms = pilot.last_lap_raw ? Math.round(pilot.last_lap_raw) : 0;
+                    var lap_minutes = Math.floor(pilot_last_lap_ms / 60000);
+                    var lap_seconds = Math.floor(pilot_last_lap_ms / 1000) % 60;
+                    var lap_milliseconds = pilot_last_lap_ms % 1000;
+                    var printable_lap = (pilot_last_lap_ms != 0) ?
+                        +lap_seconds + "." + lap_milliseconds :
+                        "---"; // mostra solo i secondi senza leading zero
+                    
+                    // update values
+                    $(this).find(".lbh-position").text(pilot_position);
+                    $(this).find(".lbh-gap-box").text(printable_lap);
+                });
+                
+                // update order according to new positions
+                const the_leaderboard = $(".lbh-pilot-container-center");
+
+                const pilots = the_leaderboard.children(".lbh-driver-wrapper").sort((a, b) => {
+                    const posA = parseInt($(a).find(".lbh-position").text(), 10);
+                    const posB = parseInt($(b).find(".lbh-position").text(), 10);
+                    return posA - posB;
+                });
+
+                the_leaderboard.append(pilots);
+            }
+            
+            $('#team_leaderboard').empty();
+            if (race.team_leaderboard && 'meta' in race.team_leaderboard) {
+                leaderboard_type = race.team_leaderboard.meta.primary_leaderboard;
+                $('#team_leaderboard').append(build_team_leaderboard(race.team_leaderboard[leaderboard_type], leaderboard_type, race.team_leaderboard.meta));
+                $('#team_leaderboard').show();
+            } else {
+                $('#team_leaderboard').hide();
+            }
+
+            if (race.status_msg) {
+                $('.race_status_message').html(race.status_msg);
+                $('.race_status_message').slideDown();
+            } else {
+                $('.race_status_message').slideUp();
+            }
+        });
+
+        socket.on('prestage_ready', default_handler['prestage_ready']);
+
+        socket.on('stage_ready', default_handler['stage_ready']);
+
+        socket.on('stop_timer', default_handler['stop_timer']);
+
+    });
+
+</script>
+
+<div class="leaderboard-horizontal">
+    
+    <!-- Race Info Block -->
+    <div class="lbh-race-info">
+        <div class="lbh-race-title">RACE 1</div>
+        <div class="lbh-race-time">Race Time <div class="lbh-racetime time-display">00:00</div></div>
+    </div>
+
+    <div class="lbh-pilot-container-center">
+        <!-- Driver 1 -->
+        <div class="lbh-driver-wrapper">
+          <div class="lbh-driver">
+            <div class="lbh-driver-top">
+              <div class="lbh-position">1</div>
+              <div class="lbh-image"><img src="fiorix.png"></div>
+              <div class="lbh-name">Fiorix</div>
+            </div>
+          </div>
+          <div class="lbh-info-row">
+            <div class="lbh-lap-time-box">Lap Time</div>
+            <div class="lbh-gap-box">+0.000</div>
+          </div>
+        </div>
+
+        <!-- Driver 2 -->
+        <div class="lbh-driver-wrapper">
+          <div class="lbh-driver">
+            <div class="lbh-driver-top">
+              <div class="lbh-position">2</div>
+              <div class="lbh-image" style="hamilton.png')"></div>
+              <div class="lbh-name">Hamilton</div>
+            </div>
+          </div>
+          <div class="lbh-info-row">
+            <div class="lbh-lap-time-box">Lap Time</div>
+            <div class="lbh-gap-box">+1.245</div>
+          </div>
+        </div>
+
+        <!-- Driver 3 -->
+        <div class="lbh-driver-wrapper">
+          <div class="lbh-driver">
+            <div class="lbh-driver-top">
+              <div class="lbh-position">3</div>
+              <div class="lbh-image" style="leclerc.png')"></div>
+              <div class="lbh-name">Leclerc</div>
+            </div>
+          </div>
+          <div class="lbh-info-row">
+            <div class="lbh-lap-time-box">Lap Time</div>
+            <div class="lbh-gap-box">+2.367</div>
+          </div>
+        </div>
+
+        <!-- Driver 4 -->
+        <div class="lbh-driver-wrapper">
+          <div class="lbh-driver">
+            <div class="lbh-driver-top">
+              <div class="lbh-position">4</div>
+              <div class="lbh-image" style="norris.png')"></div>
+              <div class="lbh-name">Norris</div>
+            </div>
+          </div>
+          <div class="lbh-info-row">
+            <div class="lbh-lap-time-box">Lap Time</div>
+            <div class="lbh-gap-box">+3.501</div>
+          </div>
+        </div>
+    </div>
+    
+    <div class="lbh-event-title">{{ getOption('eventName') }}</div>
+
+</div>
+
+</body>
+</html>

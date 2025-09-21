@@ -1,0 +1,13 @@
+{
+    "domain": "csi_toolkit",
+    "name": "CSI Toolkit",
+    "author": "FiorixF1",
+    "author_uri": "https://github.com/FiorixF1",
+    "description": "Collection of RotorHazard plugins for race management of CSI Drone Racing events",
+    "documentation_uri": "https://github.com/FiorixF1/CSI-Toolkit/",
+    "license": "GPL-3.0",
+    "license_uri": "https://github.com/FiorixF1/CSI-Toolkit/blob/main/LICENSE",
+    "version": "1.0.0",
+    "required_rhapi_version": "1.2",
+    "zip_filename": "csi_toolkit.zip"
+}
