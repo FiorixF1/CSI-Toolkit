@@ -47,7 +47,7 @@ def apply_tiebreaker(leaderboard, qualifier, first_position, second_position):
 
 def apply_tiebreaker_generic(leaderboard, qualifier, number_of_heats, bracket_type):
     if bracket_type == MULTIGP or bracket_type == CSI:
-        # no tiebreaker for ddr8
+        # no tiebreaker for ddr8de
         if number_of_heats == 14:
             # multigp16
             apply_tiebreaker(leaderboard, qualifier, 9, 10)    # Q1
@@ -56,7 +56,7 @@ def apply_tiebreaker_generic(leaderboard, qualifier, number_of_heats, bracket_ty
             apply_tiebreaker(leaderboard, qualifier, 15, 16)   # Q4
     elif bracket_type == FAI:
         if number_of_heats == 6:
-            # ddr8
+            # ddr8de
             apply_tiebreaker(leaderboard, qualifier, 5, 6)     # Q1
             apply_tiebreaker(leaderboard, qualifier, 7, 8)     # Q2
         elif number_of_heats == 8:
@@ -132,7 +132,7 @@ def build_leaderboard_generic(rhapi, heats, bracket_type):
     logger.info(f"Found {len(heats)} heats in the bracket class")
     if bracket_type == MULTIGP or bracket_type == CSI:
         if len(heats) == 6:
-            # ddr8
+            # ddr8de
             logger.info(f"Format detected: DDR 8 pilots double elimination (MultiGP style)")
             return [
                 None,  # top 4 positions are handled later due to CTA logic
@@ -174,7 +174,7 @@ def build_leaderboard_generic(rhapi, heats, bracket_type):
             return None
     elif bracket_type == FAI:
         if len(heats) == 6:
-            # ddr8
+            # ddr8de
             logger.info(f"Format detected: DDR 8 pilots double elimination (FAI style)")
             return [
                 None,  # top 4 positions are handled later due to CTA logic

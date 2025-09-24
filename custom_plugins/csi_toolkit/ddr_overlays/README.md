@@ -34,8 +34,6 @@ The page with links to overlays gives the possibility to visualize and upload th
 ### Country Flags
 A country can be set as pilot attribute in the pilots tab (dropdown). When set it shows the flag icon before the pilot's callsign.
 
-Flags have been downloaded from [flagpedia.net](https://flagpedia.net/download/images) (same width 80px, variable height, JPG format).
-
 ### Team Logo
 Teams are stored in the text file `/static/data/teams.txt` and can be set as pilot attribute in the pilots tab (dropdown).
 
