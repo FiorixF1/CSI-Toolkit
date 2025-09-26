@@ -147,17 +147,17 @@ function get_number_of_pilots_from_format(bracket_type) {
     if (format_16.includes(bracket_type)) {
         return 16;
     }
-    
+
     var format_32 = ['fai32', 'fai32de'];
     if (format_32.includes(bracket_type)) {
         return 32;
     }
-    
+
     var format_64 = ['fai64', 'fai64de'];
     if (format_64.includes(bracket_type)) {
         return 64;
     }
-    
+
     return 999;
 }
 
@@ -598,7 +598,7 @@ function render_pilots(ddr_pilot_data) {
     count = Object.keys(ddr_pilot_data).length;
     for (var i = 0; i < count; i++) {
         let pilot = ddr_pilot_data[i];
-        
+
         // if div exists
         if (document.getElementById('pilot_id_flag_' + pilot.pilot_id)) {
             document.getElementById('pilot_id_flag_' + pilot.pilot_id).innerHTML = '<img class="country_flag" src="' + getFlagURL(pilot.pilot_id, ddr_pilot_data) + '">';

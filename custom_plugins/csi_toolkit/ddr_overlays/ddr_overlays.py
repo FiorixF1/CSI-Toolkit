@@ -47,6 +47,10 @@ except:
 PILOT_IMAGE_UPLOAD_FOLDER = 'shared/avatars'
 os.makedirs(PILOT_IMAGE_UPLOAD_FOLDER, exist_ok=True)
 
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+def allowed_image(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+
 def initialize(rhapi):
     rhapi.fields.register_pilot_attribute( country_ui_field )
     if custom_teams:
@@ -146,8 +150,19 @@ def initialize(rhapi):
         if file.filename == "":
             return jsonify({"error": "empty filename"}), 400
 
+        if not allowed_image(file.filename):
+            return jsonify({"error": "invalid extension"}), 400
+
+        # size check
+        file.seek(0, os.SEEK_END)
+        size = file.tell()
+        file.seek(0)
+        if size > 10 * 1024 * 1024:
+            return jsonify({"error": "file too big (more than 10 MB)"}), 400
+
         filename = file.filename
         filepath = os.path.join(PILOT_IMAGE_UPLOAD_FOLDER, filename)
+        file.seek(0)
         file.save(filepath)
 
         # public URL to get the image
@@ -166,6 +181,13 @@ def initialize(rhapi):
         if zip_file.filename == "":
             return jsonify({"error": "empty filename"}), 400
 
+        # size check
+        zip_file.seek(0, os.SEEK_END)
+        size = zip_file.tell()
+        zip_file.seek(0)
+        if size > 100 * 1024 * 1024:
+            return jsonify({"error": "ZIP file too big (more than 100 MB)"}), 400
+
         # temporary path
         temp_path = os.path.join(PILOT_IMAGE_UPLOAD_FOLDER, "temp_upload.zip")
         zip_file.save(temp_path)
@@ -173,6 +195,13 @@ def initialize(rhapi):
         # extraction
         try:
             with zipfile.ZipFile(temp_path, 'r') as zip_ref:
+                for member in zip_ref.namelist():
+                    # avoid path traversal such as "../../"
+                    if not os.path.basename(member) == member:
+                        os.remove(temp_path)
+                        return jsonify({"error": "ZIP file contains subfolders or invalid paths"}), 400
+
+                # extract only valid files
                 zip_ref.extractall(PILOT_IMAGE_UPLOAD_FOLDER)
         except zipfile.BadZipFile:
             os.remove(temp_path)
