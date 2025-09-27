@@ -30,6 +30,21 @@
         var ddr_pilot_data;
         var ddr_class_data;
 
+        function get_teams() {
+            $.ajax({
+                    url: "/get_teams",
+                    type: "GET",
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        renderTeams(response.data);
+                    },
+                    error: function(xhr) {
+                        alert("Error: " + xhr.responseJSON.error);
+                    }
+             });
+        }
+
         $(document).ready(function () {
             socket.on('language', function (msg) {
                 if (msg.language) {
@@ -79,9 +94,14 @@
                 }
             });
 
-            $("#toggleHeader").on("click", function() {
-                $("#toggleContent").slideToggle(200);
-                $("#arrow").toggleClass("expanded");
+            $("#toggleHeaderPilots").on("click", function() {
+                $("#toggleContentPilots").slideToggle(200);
+                $("#arrowPilots").toggleClass("expanded");
+            });
+
+            $("#toggleHeaderTeams").on("click", function() {
+                $("#toggleContentTeams").slideToggle(200);
+                $("#arrowTeams").toggleClass("expanded");
             });
 
             // Quando clicco sul bottone, simulo il click sull'input nascosto
@@ -112,6 +132,8 @@
                     }
                 });
             });
+
+            get_teams();
         });
 
         function renderPilots(pilots) {
@@ -169,6 +191,64 @@
                 });
 
                 $grid.append($div);
+            });
+        }
+
+        function renderTeams(teams) {
+            const $grid = $("#teamsGrid");
+            $grid.empty();
+
+            teams.forEach(team => {
+                if (team && team != 'A') {
+                    const $div = $(`
+                        <div class="team">
+                            <img src="${getTeamImgURL(team)}" alt="${team}">
+                            <span>${team || '-'}</span>
+                            <button class="update-btn">Update logo</button>
+                        </div>
+                    `);
+
+                    // "Update logo" handling
+                    $div.find(".update-btn").on("click", function() {
+                        const $img = $div.find("img");
+                        const $input = $('<input type="file" accept="image/png">');
+
+                        $input.on("change", function(e) {
+                            const file = e.target.files[0];
+                            if (file) {
+                                // Immediate preview
+                                const reader = new FileReader();
+                                reader.onload = function(ev) {
+                                    $img.attr("src", ev.target.result);
+                                };
+                                reader.readAsDataURL(file);
+
+                                // Send to server (file name is modified to make sure it follows the naming convention)
+                                const newFile = new File([file], team.replace(/ /g,"_").toLowerCase() + ".png", { type: file.type });
+                                const formData = new FormData();
+                                formData.append("file", newFile);
+
+                                $.ajax({
+                                    url: "/upload_team_image",
+                                    type: "POST",
+                                    data: formData,
+                                    processData: false,
+                                    contentType: false,
+                                    success: function(response) {
+                                        console.log("Upload ok: ", response);
+                                        get_teams();
+                                    },
+                                    error: function(xhr) {
+                                        alert("Error: " + xhr.responseJSON.error);
+                                    }
+                                });
+                            }
+                        });
+                        $input.trigger("click");
+                    });
+
+                    $grid.append($div);
+                }
             });
         }
 
@@ -267,6 +347,37 @@
             font-size: 12px;
             cursor: pointer;
         }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            background: #fafafa;
+        }
+
+        .team img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #aaa;
+            margin-bottom: 6px;
+        }
+
+        .team span {
+            font-size: 14px;
+            margin-bottom: 6px;
+            text-align: center;
+        }
     </style>
 
     <header>
@@ -290,11 +401,11 @@
         <br>
 
         <div class="toggle-container" style="max-width: 1400px; margin: 0 auto;">
-            <div class="toggle-header" id="toggleHeader">
+            <div class="toggle-header" id="toggleHeaderPilots">
                 <h2>Pilots</h2>
-                <span class="arrow" id="arrow">▶</span>
+                <span class="arrow" id="arrowPilots">▶</span>
             </div>
-            <div class="toggle-content" id="toggleContent">
+            <div class="toggle-content" id="toggleContentPilots">
                 <div class="zip-upload">
                     <input type="file" id="zipInput" accept=".zip" style="display: none;">
                     <button class="update-btn upload-zip-btn">Upload ZIP</button>
@@ -315,8 +426,21 @@
         <p style="max-width: 700px; margin: 0 auto;"><b>Team Logos</b><br>
             Teams are stored in the text file /static/data/teams.txt and can be set as pilot attribute in the pilots tab (dropdown).
             <br>
-            Team logos are obtained from the /static/imgs/teams/ folder. The file name should be the team's name in lowercase where spaces have been replaced for underscores (_) and in the .png file type. If no team is found, it will show the default logo.
+            Team logos are visible in the container below and can be uploaded individually with the dedicated button. They are obtained from the /static/imgs/teams/ folder. The file name should be the team's name in lowercase where spaces have been replaced for underscores (_) and in the .png file type. If no team is found, it will show the default logo.
         </p>
+        <br>
+
+        <div class="toggle-container" style="max-width: 1400px; margin: 0 auto;">
+            <div class="toggle-header" id="toggleHeaderTeams">
+                <h2>Teams</h2>
+                <span class="arrow" id="arrowTeams">▶</span>
+            </div>
+            <div class="toggle-content" id="toggleContentTeams">
+                <div class="teams-grid" id="teamsGrid">
+                    <!-- Dynamically generated teams -->
+                </div>
+            </div>
+        </div>
 
         <br>
         <p style="max-width: 700px; margin: 0 auto;"><b>Brackets</b><br>

@@ -46,6 +46,7 @@ except:
 # Folder for pilot images
 PILOT_IMAGE_UPLOAD_FOLDER = 'shared/avatars'
 os.makedirs(PILOT_IMAGE_UPLOAD_FOLDER, exist_ok=True)
+TEAM_IMAGE_UPLOAD_FOLDER = 'plugins/csi_toolkit/ddr_overlays/static/imgs/teams'
 
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 def allowed_image(filename):
@@ -211,6 +212,42 @@ def initialize(rhapi):
         os.remove(temp_path)
 
         return jsonify({"success": True, "message": "ZIP uploaded successfully"})
+
+    ### get teams ###
+    @bp.route("/get_teams")
+    def get_teams():
+        return jsonify({"success": True, "data": rhapi._racecontext.rhui._racecontext.rhdata.TEAM_NAMES_LIST})
+
+    ### upload team image ###
+    @bp.route("/upload_team_image", methods=["POST"])
+    def upload_team_image():
+        if "file" not in request.files:
+            return jsonify({"error": "no file"}), 400
+
+        file = request.files["file"]
+
+        if file.filename == "":
+            return jsonify({"error": "empty filename"}), 400
+
+        if not allowed_image(file.filename):
+            return jsonify({"error": "invalid extension"}), 400
+
+        # size check
+        file.seek(0, os.SEEK_END)
+        size = file.tell()
+        file.seek(0)
+        if size > 10 * 1024 * 1024:
+            return jsonify({"error": "file too big (more than 10 MB)"}), 400
+
+        filename = file.filename
+        filepath = os.path.join(TEAM_IMAGE_UPLOAD_FOLDER, filename)
+        file.seek(0)
+        file.save(filepath)
+
+        # public URL to get the image
+        file_url = filepath
+
+        return jsonify({"success": True, "new_url": file_url})
 
     rhapi.ui.blueprint_add(bp)
 

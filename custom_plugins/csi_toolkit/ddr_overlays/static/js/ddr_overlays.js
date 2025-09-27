@@ -185,7 +185,7 @@ function build_nextup(leaderboard, display_type, meta, ddr_pilot_data, show_posi
         let pilot_name = leaderboard[i].callsign;       
         let flagImg = getFlagURL(leaderboard[i].pilot_id, ddr_pilot_data);
         let pilotImg = getPilotImgURL(leaderboard[i]);
-        let teamImg = getTeamImgURL(leaderboard[i]);
+        let teamImg = getTeamImgURL(leaderboard[i].team_name);
 
         let html = '<div class="nextup_pilot">';
         if (show_position) {
@@ -309,7 +309,7 @@ function build_leaderboard(leaderboard, display_type, meta, number_of_pilots=999
             var pilotImg = getPilotImgURL(leaderboard[i]);
             row.append('<td class="avatar"><img src=" ' + pilotImg + ' "></td>');
 
-            let teamImg = getTeamImgURL(leaderboard[i]);
+            let teamImg = getTeamImgURL(leaderboard[i].team_name);
 
             let flagImg = getFlagURL(leaderboard[i].pilot_id, ddr_pilot_data);
             row.append('<td class="flag" id="pilot_id_flag_' + leaderboard[i].pilot_id + '"><img class="country_flag" src="' + flagImg + '"></td>');
@@ -576,8 +576,8 @@ function getPilotImgURL(pilot) {
     return pilotImg;
 }
 
-function getTeamImgURL(pilot) {
-    let teamImg = '/csi_toolkit/ddr_overlays/static/imgs/teams/' + pilot.team_name?.replace(/ /g,"_").toLowerCase() + '.png';       
+function getTeamImgURL(team) {
+    let teamImg = '/csi_toolkit/ddr_overlays/static/imgs/teams/' + team?.replace(/ /g,"_").toLowerCase() + '.png';
     if (!imageExists(teamImg)) {
         teamImg = '/csi_toolkit/ddr_overlays/static/imgs/no_team.png';
     }
@@ -742,7 +742,7 @@ function build_elimination_brackets(race_bracket_type, race_class_id, ddr_pilot_
             if (pilot) {
                 let flagImg = getFlagURL(pilot.pilot_id, ddr_pilot_data);
                 let pilotImg = getPilotImgURL(pilot);
-                let teamImg = getTeamImgURL(pilot);
+                let teamImg = getTeamImgURL(pilot.team_name);
 
                 html += '<div class="bracket_race_pilot">';
 
