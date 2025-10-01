@@ -179,26 +179,28 @@
 
         let heat_index = heat_number-1;
         let bracket_format_info = bracket_formats[race_bracket_type];
-        let is_preliminary_bracket = (bracket_format_info[heat_index].type == "preliminary");
-        let is_winner_bracket = (bracket_format_info[heat_index].type == "winner");
-        let is_final_heat = (heat_number >= bracket_format_info[bracket_format_info.length-1].number);
+        if (bracket_format_info) {
+            let is_preliminary_bracket = (bracket_format_info[heat_index].type == "preliminary");
+            let is_winner_bracket = (bracket_format_info[heat_index].type == "winner");
+            let is_final_heat = (heat_number >= bracket_format_info[bracket_format_info.length-1].number);
 
-        let imagePath = "";
-        if (is_preliminary_bracket) {
-            imagePath = "/csi_toolkit/ddr_overlays/static/imgs/preliminary.png";
-        } else if (!is_winner_bracket) {
-            imagePath = "/csi_toolkit/ddr_overlays/static/imgs/redemption.png";
-        } else if (is_final_heat) {
-            imagePath = "/csi_toolkit/ddr_overlays/static/imgs/final.png";
-        } else if (is_winner_bracket) {
-            imagePath = "/csi_toolkit/ddr_overlays/static/imgs/winner.png";
-        }
+            let imagePath = "";
+            if (is_preliminary_bracket) {
+                imagePath = "/csi_toolkit/ddr_overlays/static/imgs/preliminary.png";
+            } else if (!is_winner_bracket) {
+                imagePath = "/csi_toolkit/ddr_overlays/static/imgs/redemption.png";
+            } else if (is_final_heat) {
+                imagePath = "/csi_toolkit/ddr_overlays/static/imgs/final.png";
+            } else if (is_winner_bracket) {
+                imagePath = "/csi_toolkit/ddr_overlays/static/imgs/winner.png";
+            }
 
-        if (imagePath) {
-            imgElement.src = imagePath;
-            imgElement.style.display = "block";
-        } else {
-            imgElement.style.display = "none";
+            if (imagePath) {
+                imgElement.src = imagePath;
+                imgElement.style.display = "block";
+            } else {
+                imgElement.style.display = "none";
+            }
         }
     }
 </script>
