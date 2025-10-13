@@ -19,7 +19,7 @@ Stream overlays for RotorHazard as a plugin. You can use these in OBS or any oth
 ## Installation
 Download the latest release and put the **ddr_overlays** folder in the **plugins** folder of your RotorHazard installation. (Re-)Start your RotorHazard server.
 
-On the settings page of your RotorHazard panel the section `DDR - OBS Overlays` shows up. Press the link, it will bring you to the page with links to the overlays.
+On the settings page of your RotorHazard panel the section `DDR - OBS Overlays` shows up. Press the link, it will bring you to the page with links to the overlays. A friendly menu will let you choose the bracket type and the class used as data source for the content of the overlay: select the desired options then click on the link you want to display. The URL will be generated dynamically on a new browser page according to the selected options.
 
 To setup country flags, pilot avatars and team logos refer to the **Important Information** below.
 
