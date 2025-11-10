@@ -471,6 +471,9 @@ def build_leaderboard_generic(rhapi, heats, bracket_type):
 
 ####################################################################################################
 
+previous_winners_names = dict()
+previous_chace_the_ace_winner = dict()
+
 def brackets(rhapi, race_class, args):
     """ look for qualifier results """
     if int(args["qualifier_class"]) == int(race_class.id):
@@ -644,12 +647,20 @@ def brackets(rhapi, race_class, args):
                         leaderboard[2]["result"] = "[3] [3]"
                         leaderboard[3]["result"] = "[4] [4]"
 
-                    rhapi.ui.message_alert(rhapi.__('Chase the Ace Winner: {}').format(leaderboard[0]['callsign']))
+                    prev = previous_chace_the_ace_winner.get(race_class.id)
+                    curr = leaderboard[0]['callsign']
+                    if prev != curr:
+                        rhapi.ui.message_alert(rhapi.__('Chase the Ace Winner: {}').format(curr))
+                        previous_chace_the_ace_winner[race_class.id] = curr
 
                     break
 
         if not RACE_IS_OVER and len(winners_names) > 0:
-            rhapi.ui.message_notify(rhapi.__('Wins: {}').format(', '.join(winners_names)))
+            prev = previous_winners_names.get(race_class.id)
+            curr = ', '.join(winners_names)
+            if prev != curr:
+                rhapi.ui.message_alert(rhapi.__('Pilots with one win: {}').format(curr))
+                previous_winners_names[race_class.id] = curr
     else:
         # if CTA is disabled, just use the results of the last heat
         leaderboard[0] = build_leaderboard_object(rhapi, 1, heats, NUMBER_OF_HEATS, 1, "1° in Final")
