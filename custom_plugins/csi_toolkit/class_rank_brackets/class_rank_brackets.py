@@ -473,6 +473,7 @@ def build_leaderboard_generic(rhapi, heats, bracket_type):
 
 previous_winners_names = dict()
 previous_chace_the_ace_winner = dict()
+previous_iron_man_winner = dict()
 
 def brackets(rhapi, race_class, args):
     """ look for qualifier results """
@@ -575,8 +576,15 @@ def brackets(rhapi, race_class, args):
                     leaderboard[1] = build_leaderboard_object(rhapi, 2, heats, NUMBER_OF_HEATS, 2, "[2] [2]")
                     leaderboard[2] = build_leaderboard_object(rhapi, 3, heats, NUMBER_OF_HEATS, 3, "[3] [3]")
                     leaderboard[3] = build_leaderboard_object(rhapi, 4, heats, NUMBER_OF_HEATS, 4, "[4] [4]")
-                    rhapi.ui.message_alert(rhapi.__('Iron Man Winner: {}').format(leaderboard[0]['callsign']))
+
                     RACE_IS_OVER = True
+
+                    prev = previous_iron_man_winner.get(race_class.id)
+                    curr = leaderboard[0]['callsign']
+                    if prev != curr:
+                        rhapi.ui.message_alert(rhapi.__('Iron Man Winner: {}').format(curr))
+                        previous_iron_man_winner[race_class.id] = curr
+
                     break
 
                 winners[winner_pilot_id]["wins"] += 1
