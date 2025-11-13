@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>CSI Toolkit — Orchestrator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Scripts -->
+  <script type="text/javascript" src="/static/jquery-3.6.4/jquery-3.6.4.min.js"></script>
+  <script type="text/javascript" src="/static/articulate/articulate.min.js"></script>
+  <script type="text/javascript" src="/static/socket.io-4.6.1/socket.io.min.js"></script>
+  <script type="text/javascript" src="/static/smoothie/smoothie.js"></script>
+  <script type="text/javascript" src="/static/magnific-1.1.0/magnific-inline-min.js"></script>
+  <script type="text/javascript" src="/static/svgasset.js"></script>
+  <script type="text/javascript" src="/static/rh-ui.js"></script>
+  <script type="text/javascript" src="/static/rotorhazard.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/csi_toolkit/ddr_overlays/static/js/ddr_overlays.js"></script>
+
+  <style>
+    :root {
+        font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    body {
+        margin: 0;
+        background: #0b1020;
+        color: #e6eef8;
+        display: flex;
+        align-items: flex-start;
+        gap: 24px;
+        padding: 32px
+    }
+    .card {
+        background: #0f1724;
+        border: 1px solid rgba(255,255,255,0.04);
+        padding: 18px;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(2,6,23,.6);
+        width: 760px
+    }
+    h1 {
+        margin: 0 0 12px 0;
+        font-size: 20px
+    }
+    button.primary {
+        background: #06b6d4;
+        border: none;
+        color: #062027;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer
+    }
+    button.ghost {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.06);
+        color: inherit;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer
+    }
+    .muted {
+        color: #9fb0c7;
+        font-size: 13px
+    }
+
+    /* modal */
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(rgba(2,6,23,0.6),rgba(2,6,23,0.6));
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 50
+    }
+    .modal {
+        background: #08202a;
+        padding: 20px;
+        border-radius: 12px;
+        width: 640px;
+        max-width: 94%;
+        box-shadow: 0 10px 40px rgba(2,6,23,.6)
+    }
+    .row {
+        display: flex;
+        gap: 12px;
+        align-items: center
+    }
+    .col {
+        display: flex;
+        flex-direction: column;
+        gap: 8px
+    }
+    .pilots-list {
+        max-height: 210px;
+        overflow: auto;
+        border-radius: 8px;
+        padding: 8px;
+        background: #07181f;
+        border: 1px solid rgba(255,255,255,0.03)
+    }
+    label.pilot {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px;
+        border-radius: 6px;
+        cursor: pointer
+    }
+    input[type='text'],select,input[type='number'] {
+        background: #02131a;
+        border: 1px solid rgba(255,255,255,0.04);
+        color: inherit;
+        padding: 8px;
+        border-radius: 8px
+    }
+    .footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 14px
+    }
+    .steps {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 14px
+    }
+    .step {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.02);
+        font-size: 13px
+    }
+    .hidden {
+        display: none
+    }
+    .note {
+        font-size: 13px;
+        color: #9fb0c7
+    }
+    .small {
+        font-size: 12px;
+        color: #7da0b5
+    }
+    .success {
+        color: #7ee787
+    }
+    .error {
+        color: #ff7b7b
+    }
+    pre {
+        background: #03151a;
+        padding: 8px;
+        border-radius: 8px;
+        overflow: auto
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Orchestrator — CSI Toolkit</h1>
+    <p class="muted">Pannello per la creazione e gestione automatizzata di eventi con RotorHazard. Premi <strong>Crea evento</strong> per iniziare una procedura guidata.</p>
+
+    <div style="margin-top:18px">
+      <button id="createBtn" class="primary">Crea evento</button>
+    </div>
+
+    <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
+
+    <div class="small">Log delle comunicazioni verso il server:</div>
+    <pre id="log" style="height:160px">Ancora nessuna azione.</pre>
+  </div>
+
+  <!-- Overlay / Modal -->
+  <div id="overlay" class="overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="steps" id="wizardSteps">
+        <div class="step" data-step="1">1. Piloti & nome</div>
+        <div class="step" data-step="2">2. Parametri</div>
+        <div class="step" data-step="3">3. Conferma</div>
+      </div>
+
+      <!-- Step 1 -->
+      <div id="step1">
+        <h2 id="modalTitle">Crea evento — Seleziona piloti</h2>
+        <div class="col" style="gap:10px">
+          <label class="small">Nome evento</label>
+          <input id="eventName" type="text" placeholder="es. Open, 3 pollici" />
+
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div class="note">Seleziona i piloti che parteciperanno</div>
+            <div class="small">Selezionati: <span id="selectedCount">0</span></div>
+          </div>
+
+          <div class="pilots-list" id="pilotsList" aria-label="Lista piloti">
+            <!-- pilot checkboxes injected by JS -->
+          </div>
+
+          <div class="footer">
+            <button id="cancel1" class="ghost">Annulla</button>
+            <button id="next1" class="primary">Avanti</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="step2" class="hidden">
+        <h2>Parametri evento</h2>
+        <div class="col">
+          <div class="row">
+            <div style="flex:1">
+              <label class="small">Piloti per heat (prove libere)</label>
+              <select id="freeHeatSize">
+                <option>3</option>
+                <option selected>4</option>
+                <option>5</option>
+                <option>6</option>
+              </select>
+            </div>
+            <div style="flex:1">
+              <label class="small">Piloti per heat (qualifiche)</label>
+              <select id="qualHeatSize">
+                <option>3</option>
+                <option selected>4</option>
+                <option>5</option>
+                <option>6</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:10px">
+            <label class="small">Tipo di finale</label>
+            <select id="finalType">
+              <option value="16" selected>Doppia eliminazione — 16 piloti</option>
+              <option value="8">Doppia eliminazione — 8 piloti</option>
+            </select>
+          </div>
+
+          <!-- conditional finaline options -->
+          <div id="finalinesOptions" class="hidden" style="margin-top:12px;border-radius:8px;padding:10px;background:rgba(255,255,255,0.01)">
+            <div class="row">
+              <div style="flex:1">
+                <label class="small">Numero di piloti che avanzano nelle finaline</label>
+                <input id="numAdvance" type="number" min="1" max="4" value="2" />
+              </div>
+              <div style="flex:1">
+                <label class="small">Piloti per heat (finaline)</label>
+                <input id="finalHeatSize" type="number" min="2" max="6" value="4" />
+              </div>
+            </div>
+            <div class="small" style="margin-top:8px">Queste opzioni appaiono solo se ci sono più piloti del limite della finale selezionata.</div>
+          </div>
+
+          <div class="footer">
+            <button id="back2" class="ghost">Indietro</button>
+            <button id="cancel2" class="ghost">Annulla</button>
+            <button id="next2" class="primary">Avanti</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 (confirmation) -->
+      <div id="step3" class="hidden">
+        <h2>Conferma evento</h2>
+        <div id="summary" class="col"></div>
+        <div class="footer">
+          <button id="back3" class="ghost">Indietro</button>
+          <button id="cancel3" class="ghost">Annulla</button>
+          <button id="confirm" class="primary">Conferma e invia</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    var data_dependencies = [
+      'all_languages',
+      'language',
+      'result_data',
+      'pilot_data',
+      'class_data',
+    ];
+
+    rotorhazard.show_messages = false;
+
+    var pilots;
+    var classes;
+  
+    $(document).ready(function () {
+      socket.on('language', function (msg) {
+        if (msg.language) {
+          rotorhazard.interface_language = msg.language;
+        }
+      });
+
+      socket.on('pilot_data', function (msg) {
+        pilots = msg.pilots;
+
+        // sort by callsign
+        pilots.sort((a, b) => a.callsign.localeCompare(b.callsign));
+      });
+
+      socket.on('class_data', function (msg) {
+        classes = msg.classes;
+      });
+    });
+
+    // --- dati d'esempio per i piloti ---
+    /*const pilots = [
+      { id: 1, callsign: 'Alessandro' },
+      { id: 2, callsign: 'Bruno' },
+      { id: 3, callsign: 'Carla' },
+      { id: 4, callsign: 'Diego' },
+      { id: 5, callsign: 'Elena' },
+      { id: 6, callsign: 'Flavio' },
+      { id: 7, callsign: 'Giulia' },
+      { id: 8, callsign: 'Hugo' },
+      { id: 9, callsign: 'Irene' },
+      { id: 10, callsign: 'Luca' },
+    ];*/
+
+    // --- helper DOM ---
+    const overlay = document.getElementById('overlay');
+    const createBtn = document.getElementById('createBtn');
+    const pilotsListEl = document.getElementById('pilotsList');
+    const selectedCountEl = document.getElementById('selectedCount');
+    const logEl = document.getElementById('log');
+
+    // wizard steps
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+
+    // forms
+    const eventNameEl = document.getElementById('eventName');
+    const freeHeatSizeEl = document.getElementById('freeHeatSize');
+    const qualHeatSizeEl = document.getElementById('qualHeatSize');
+    const finalTypeEl = document.getElementById('finalType');
+    const finalinesOptionsEl = document.getElementById('finalinesOptions');
+    const numAdvanceEl = document.getElementById('numAdvance');
+    const finalHeatSizeEl = document.getElementById('finalHeatSize');
+    const summaryEl = document.getElementById('summary');
+
+    // buttons
+    document.getElementById('cancel1').addEventListener('click', closeModal);
+    document.getElementById('cancel2').addEventListener('click', closeModal);
+    document.getElementById('cancel3').addEventListener('click', closeModal);
+
+    document.getElementById('next1').addEventListener('click', gotoStep2);
+    document.getElementById('back2').addEventListener('click', gotoStep1);
+    document.getElementById('next2').addEventListener('click', gotoStep3);
+    document.getElementById('back3').addEventListener('click', gotoStep2);
+
+    document.getElementById('confirm').addEventListener('click', confirmAndSend);
+
+    // mostra modal
+    createBtn.addEventListener('click', () => {
+      populatePilots();
+      openModal();
+    });
+
+    // populate pilots list
+    function populatePilots() {
+      pilotsListEl.innerHTML = '';
+      pilots.forEach((p, idx) => {
+        const id = 'pilot_'+idx;
+        const label = document.createElement('label');
+        label.className = 'pilot';
+        label.innerHTML = `\n          <input type="checkbox" id="${id}" data-id="${p.pilot_id}" data-callsign="${p.callsign}" />\n          <span>${p.callsign}</span>\n        `;
+        pilotsListEl.appendChild(label);
+        label.querySelector('input').addEventListener('change', updateSelectedCount);
+      });
+      updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+      const count = Array.from(pilotsListEl.querySelectorAll('input[type=checkbox]')).filter(c => c.checked).length;
+      selectedCountEl.textContent = count;
+      // update finalines visibility according to currently selected pilots and final type
+      checkFinalinesVisibility(count);
+    }
+
+    function checkFinalinesVisibility(selectedCount) {
+      // show finaline options only if there are more pilots than the final-type limit (8 or 16)
+      const finalLimit = parseInt(finalTypeEl.value, 10); // 16 or 8
+      if (selectedCount > finalLimit) {
+        finalinesOptionsEl.classList.remove('hidden');
+      } else {
+        finalinesOptionsEl.classList.add('hidden');
+      }
+    }
+
+    finalTypeEl.addEventListener('change', () => {
+      const currentSelected = Array.from(pilotsListEl.querySelectorAll('input[type=checkbox]')).filter(c => c.checked).length;
+      checkFinalinesVisibility(currentSelected);
+    });
+
+    // modal control
+    function openModal() {
+      overlay.style.display = 'flex';
+      overlay.setAttribute('aria-hidden','false');
+      gotoStep1();
+    }
+    function closeModal() {
+      overlay.style.display = 'none';
+      overlay.setAttribute('aria-hidden','true');
+      // reset forms
+      eventNameEl.value = '';
+      freeHeatSizeEl.value = '4';
+      qualHeatSizeEl.value = '4';
+      finalTypeEl.value = '16';
+      numAdvanceEl.value = '2';
+      finalHeatSizeEl.value = '4';
+    }
+
+    function gotoStep1() {
+      step1.classList.remove('hidden');
+      step2.classList.add('hidden');
+      step3.classList.add('hidden');
+    }
+    function gotoStep2() {
+      // validation: almeno 2 piloti
+      const selected = getSelectedPilots();
+      if (selected.length < 2) {
+        alert('Seleziona almeno 2 piloti per creare un evento.');
+        return;
+      }
+      step1.classList.add('hidden');
+      step2.classList.remove('hidden');
+      step3.classList.add('hidden');
+      // update finalines visibility
+      checkFinalinesVisibility(selected.length);
+    }
+    function gotoStep3() {
+      // simple validation dei parametri
+      const numAdvance = parseInt(numAdvanceEl.value, 10);
+      if (numAdvance < 1) {
+        alert('Numero di piloti che avanzano deve essere almeno 1');
+        return;
+      }
+      step1.classList.add('hidden');
+      step2.classList.add('hidden');
+      step3.classList.remove('hidden');
+      renderSummary();
+    }
+
+    function getSelectedPilots() {
+      return Array.from(pilotsListEl.querySelectorAll('input[type=checkbox]')).filter(c => c.checked);
+    }
+
+    function renderSummary() {
+      const selected = getSelectedPilots();
+      const data = {
+        name: eventNameEl.value || 'Untitled Event',
+        pilots: selected.map(p => p.dataset.callsign),
+        freeHeatSize: parseInt(freeHeatSizeEl.value, 10),
+        qualHeatSize: parseInt(qualHeatSizeEl.value, 10),
+        finalType: parseInt(finalTypeEl.value, 10),
+        numAdvance: parseInt(numAdvanceEl.value, 10),
+        finalHeatSize: parseInt(finalHeatSizeEl.value, 10)
+      };
+      summaryEl.innerHTML = `\n        <div class="small">Nome evento: <strong>${escapeHtml(data.name)}</strong></div>\n        <div class="small">Piloti (${data.pilots.length}): ${escapeHtml(data.pilots.join(', '))}</div>\n        <div class="small">Prove libere: ${data.freeHeatSize} piloti per heat</div>\n        <div class="small">Qualifiche: ${data.qualHeatSize} piloti per heat</div>\n        <div class="small">Finale: Doppia eliminazione — ${data.finalType} piloti</div>\n        ${ (data.pilots.length > data.finalType) ? `<div class="small">Finaline: ${data.numAdvance} avanzano — heat da ${data.finalHeatSize}</div>` : '' }
+      `;
+    }
+
+    function confirmAndSend() {
+      const selected = getSelectedPilots();
+      const payload = {
+        name: eventNameEl.value || 'Untitled Event',
+        pilots: selected.map(p => Object({id: p.dataset.id, callsign: p.dataset.callsign})),
+        settings: {
+          freeHeatSize: parseInt(freeHeatSizeEl.value, 10),
+          qualHeatSize: parseInt(qualHeatSizeEl.value, 10),
+          finalType: parseInt(finalTypeEl.value, 10),
+        }
+      };
+      // aggiungi finaline solo se visibili
+      if (!finalinesOptionsEl.classList.contains('hidden')) {
+        payload.settings.numAdvance = parseInt(numAdvanceEl.value, 10);
+        payload.settings.finalHeatSize = parseInt(finalHeatSizeEl.value, 10);
+      }
+
+      // mostra log locale
+      appendLog('Invio evento al server RotorHazard...');
+      appendLog(JSON.stringify(payload, null, 2));
+
+      fetch('/orchestrator/create_event', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      })
+      .then(async res => {
+        if (!res.ok) throw new Error('Server error: '+res.status);
+        const data = await res.json();
+        appendLog('Evento creato con successo: ' + (data.id ? `id=${data.id}` : JSON.stringify(data)));
+        overlay.style.display = 'none';
+      })
+      .catch(err => {
+        appendLog("Errore durante l'invio: " + err.message, true);
+        alert('Errore durante l\'invio verso RotorHazard: '+err.message);
+      });
+    }
+
+    function appendLog(msg, isError=false) {
+      const t = new Date().toLocaleString();
+      logEl.textContent = `${t} - ${msg}\n\n` + logEl.textContent;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // close overlay when clicking outside modal
+    overlay.addEventListener('click', (e)=>{ if (e.target === overlay) closeModal(); });
+
+  </script>
+</body>
+</html>
