@@ -14,6 +14,7 @@
   <script type="text/javascript" src="/static/rh-ui.js"></script>
   <script type="text/javascript" src="/static/rotorhazard.js"></script>
   <script type="text/javascript" charset="utf-8" src="/csi_toolkit/ddr_overlays/static/js/ddr_overlays.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/csi_toolkit/orchestrator/static/js/FileSaver.min.js"></script>
 
   <style>
     :root {
@@ -35,6 +36,47 @@
         border-radius: 12px;
         box-shadow: 0 6px 20px rgba(2,6,23,.6);
         width: 760px
+    }
+    .event-card {
+        background: #0f1724;
+        border: 1px solid rgba(255,255,255,0.06);
+        padding: 14px;
+        border-radius: 10px;
+        margin-top: 12px;
+    }
+    .event-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+    .event-options {
+        font-size: 13px;
+        color: #9fb0c7;
+        margin-bottom: 8px;
+    }
+    .event-links a {
+        color: #06b6d4;
+        font-size: 13px;
+        display: block;
+        margin: 3px 0;
+    }
+    .export-btn {
+      margin-top: 6px;
+      background: #06b6d4;
+      border: none;
+      color: #062027;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .delete-btn {
+      margin-left: 8px;
+      background: #d9534f;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
     }
     h1 {
         margin: 0 0 12px 0;
@@ -165,16 +207,20 @@
     </div>
 
     <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
+      <h3>Eventi creati</h3>
+    <div id="eventsContainer" class="events-list"></div>
+
+    <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
 
     <div class="small">Log delle comunicazioni verso il server:</div>
-    <pre id="log" style="height:160px">Ancora nessuna azione.</pre>
+    <pre id="log" style="height:160px"></pre>
   </div>
 
   <!-- Overlay / Modal -->
   <div id="overlay" class="overlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="steps" id="wizardSteps">
-        <div class="step" data-step="1">1. Piloti & nome</div>
+        <div class="step" data-step="1">1. Piloti & Nome</div>
         <div class="step" data-step="2">2. Parametri</div>
         <div class="step" data-step="3">3. Conferma</div>
       </div>
@@ -184,7 +230,7 @@
         <h2 id="modalTitle">Crea evento — Seleziona piloti</h2>
         <div class="col" style="gap:10px">
           <label class="small">Nome evento</label>
-          <input id="eventName" type="text" placeholder="es. Open, 3 pollici" />
+          <input id="eventName" type="text" placeholder="es. Open, 3 Inch" />
 
           <div class="row" style="justify-content:space-between;align-items:center">
             <div class="note">Seleziona i piloti che parteciperanno</div>
@@ -269,6 +315,20 @@
         </div>
       </div>
 
+      <div id="createLoading" class="small" style="margin-top:10px;display:none;">Elaborazione...</div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div id="deleteConfirm" class="overlay hidden" style="justify-content:center;align-items:center;">
+    <div class="modal" style="max-width:400px;">
+      <h3>Confermi di voler cancellare l'evento?</h3>
+      <p class="small">Questa operazione è irreversibile.</p>
+      <div style="text-align:right;margin-top:12px;">
+        <button id="delNo" class="ghost">Annulla</button>
+        <button id="delYes" class="primary" style="background:#d9534f;color:white;">Cancella</button>
+      </div>
+      <div id="deleteLoading" class="small" style="margin-top:10px;display:none;">Elaborazione...</div>
     </div>
   </div>
 
@@ -285,7 +345,8 @@
 
     var pilots;
     var classes;
-  
+    var events = [];
+
     $(document).ready(function () {
       socket.on('language', function (msg) {
         if (msg.language) {
@@ -302,22 +363,109 @@
 
       socket.on('class_data', function (msg) {
         classes = msg.classes;
+        loadEvents();
       });
     });
 
-    // --- dati d'esempio per i piloti ---
-    /*const pilots = [
-      { id: 1, callsign: 'Alessandro' },
-      { id: 2, callsign: 'Bruno' },
-      { id: 3, callsign: 'Carla' },
-      { id: 4, callsign: 'Diego' },
-      { id: 5, callsign: 'Elena' },
-      { id: 6, callsign: 'Flavio' },
-      { id: 7, callsign: 'Giulia' },
-      { id: 8, callsign: 'Hugo' },
-      { id: 9, callsign: 'Irene' },
-      { id: 10, callsign: 'Luca' },
-    ];*/
+    // Rendering eventi esistenti
+    function loadEvents() {
+      $('#eventsContainer').html('<div class="small">Caricamento...</div>');
+      $.getJSON('/orchestrator/get_events', function(data) {
+        events = data;
+        renderEvents();
+      });
+    }
+
+    function renderEvents() {
+      const box = $('#eventsContainer');
+      box.empty();
+      /*events = [{
+          name: "Test",
+          classes: {
+              free_practice: { id: [int], name: [string] },
+              qualifier:     { id: [int], name: [string] },
+              final:         { id: [int], name: [string] },
+              small_final:   { id: [int], name: [string] }
+          },
+          bracket_type: "multigp16" | "ddr8de"
+      }];*/
+      if (events.length === 0 || !events.success) {
+        box.html('<div class="small">Nessun evento.</div>');
+        return;
+      }
+
+      events.data.forEach(ev=>{
+        const init_html = `
+          <div class="event-card" data-eventid="${ev.name}">
+            <div class="event-title">${ev.name}</div>
+            <div class="event-options">`;
+        const middle_html = `<div>
+              <b>Prove libere:</b> ${ev.classes.free_practice.name} (${ev.classes.free_practice.id})<br>
+              <b>Qualifiche:</b> ${ev.classes.qualifier.name} (${ev.classes.qualifier.id})<br>
+              <b>Finali:</b> ${ev.classes.final.name} (${ev.classes.final.id})<br>
+              <b>Finaline:</b> ${ev.classes.small_final?.name} (${ev.classes.small_final?.id})
+            </div>`;
+        const fini_html = `<div class="event-links">
+              <a href="/ddr_overlays/stream/results">Live Results</a>
+              <a href="/ddr_overlays/stream/bar_vertical">Status Bar Vertical</a>
+              <a href="/ddr_overlays/stream/bar_horizontal">Status Bar Horizontal</a>
+              <a href="/ddr_overlays/stream/last_heat/${ev.bracket_type}/0">Last Heat (brackets)</a>
+              <a href="/ddr_overlays/stream/next_up/${ev.bracket_type}/0">Next Up (brackets)</a>
+              <a href="/ddr_overlays/stream/last_heat/bumpup/0">Last Heat (bump up)</a>
+              <a href="/ddr_overlays/stream/next_up/bumpup/0">Next Up (bump up)</a>
+              <a href="/ddr_overlays/stream/brackets/${ev.bracket_type}/${ev.classes.final.id}">Brackets</a>
+              <a href="/ddr_overlays/stream/leaderboard_pages/${ev.bracket_type}/${ev.classes.qualifier.id}">Leaderboard Qualifiche</a>
+              <a href="/ddr_overlays/stream/podium/${ev.bracket_type}/${ev.classes.final.id}">Podio Finali</a>
+            </div>
+
+            <button class="export-btn">Esporta risultati</button>
+            <button class="delete-btn">Cancella evento</button>
+          </div>`;
+        box.append(init_html+middle_html+fini_html);
+      });
+
+      // bind export buttons
+      $('.export-btn').click(function() {
+        const card = $(this).closest('.event-card');
+        const id = card.data('eventid');  // the ID is the event name, not a separate number
+
+        const payload = {
+          eventName: id
+        };
+
+        // mostra log locale
+        appendLog('Invio richiesta al server RotorHazard...');
+        appendLog(JSON.stringify(payload, null, 2));
+
+        fetch('/orchestrator/export_results', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        })
+        .then(async res => {
+          if (!res.ok) throw new Error('Server error: ' + res.status);
+          const data = await res.json();
+          if (data.success) {
+            appendLog('Risultati esportati con successo: ' + JSON.stringify(data, null, 2));
+            saveAs(new Blob([data.data.data], {type: data.data.encoding}), `Risultati Evento ${id}.csv`);
+          } else {
+            appendLog('Errore durante l\'esportazione: ' + JSON.stringify(data, null, 2));
+            alert('Errore durante l\'esportazione: ' + data.error);
+          }
+        })
+        .catch(err => {
+          appendLog("Errore durante l'invio: " + err.message, true);
+          alert('Errore durante l\'invio verso RotorHazard: ' + err.message);
+        });
+      });
+
+      // bind delete buttons
+      $('.delete-btn').click(function() {
+        const card = $(this).closest('.event-card');
+        const id = card.data('eventid');  // the ID is the event name, not a separate number
+        showDeleteConfirm(id);
+      });
+    }
 
     // --- helper DOM ---
     const overlay = document.getElementById('overlay');
@@ -374,7 +522,7 @@
     }
 
     function updateSelectedCount() {
-      const count = Array.from(pilotsListEl.querySelectorAll('input[type=checkbox]')).filter(c => c.checked).length;
+      const count = getSelectedPilots().length;
       selectedCountEl.textContent = count;
       // update finalines visibility according to currently selected pilots and final type
       checkFinalinesVisibility(count);
@@ -391,7 +539,7 @@
     }
 
     finalTypeEl.addEventListener('change', () => {
-      const currentSelected = Array.from(pilotsListEl.querySelectorAll('input[type=checkbox]')).filter(c => c.checked).length;
+      const currentSelected = getSelectedPilots().length;
       checkFinalinesVisibility(currentSelected);
     });
 
@@ -419,7 +567,7 @@
       step3.classList.add('hidden');
     }
     function gotoStep2() {
-      // validation: almeno 2 piloti
+      // validazione: almeno 2 piloti
       const selected = getSelectedPilots();
       if (selected.length < 2) {
         alert('Seleziona almeno 2 piloti per creare un evento.');
@@ -432,10 +580,21 @@
       checkFinalinesVisibility(selected.length);
     }
     function gotoStep3() {
-      // simple validation dei parametri
+      // validazione dei parametri
       const numAdvance = parseInt(numAdvanceEl.value, 10);
-      if (numAdvance < 1) {
-        alert('Numero di piloti che avanzano deve essere almeno 1');
+      const finalHeatSize = parseInt(finalHeatSizeEl.value, 10);
+      if (numAdvance >= finalHeatSize) {
+        alert('I piloti che avanzano nelle finaline devono essere inferiori ai piloti della heat.');
+        return;
+      }
+      const numPilots = getSelectedPilots().length;
+      const finalType = parseInt(finalTypeEl.value, 10);
+      if (finalType == 16 && numPilots < 12) {
+        alert('Per le finali a doppia eliminazione da 16 piloti sono richiesti almeno 12 piloti partecipanti.');
+        return;
+      }
+      if (finalType == 8 && numPilots < 6) {
+        alert('Per le finali a doppia eliminazione da 8 piloti sono richiesti almeno 6 piloti partecipanti.');
         return;
       }
       step1.classList.add('hidden');
@@ -451,7 +610,7 @@
     function renderSummary() {
       const selected = getSelectedPilots();
       const data = {
-        name: eventNameEl.value || 'Untitled Event',
+        eventName: eventNameEl.value || 'Untitled Event',
         pilots: selected.map(p => p.dataset.callsign),
         freeHeatSize: parseInt(freeHeatSizeEl.value, 10),
         qualHeatSize: parseInt(qualHeatSizeEl.value, 10),
@@ -459,14 +618,16 @@
         numAdvance: parseInt(numAdvanceEl.value, 10),
         finalHeatSize: parseInt(finalHeatSizeEl.value, 10)
       };
-      summaryEl.innerHTML = `\n        <div class="small">Nome evento: <strong>${escapeHtml(data.name)}</strong></div>\n        <div class="small">Piloti (${data.pilots.length}): ${escapeHtml(data.pilots.join(', '))}</div>\n        <div class="small">Prove libere: ${data.freeHeatSize} piloti per heat</div>\n        <div class="small">Qualifiche: ${data.qualHeatSize} piloti per heat</div>\n        <div class="small">Finale: Doppia eliminazione — ${data.finalType} piloti</div>\n        ${ (data.pilots.length > data.finalType) ? `<div class="small">Finaline: ${data.numAdvance} avanzano — heat da ${data.finalHeatSize}</div>` : '' }
+      summaryEl.innerHTML = `\n        <div class="small">Nome evento: <strong>${escapeHtml(data.eventName)}</strong></div>\n        <div class="small">Piloti (${data.pilots.length}): ${escapeHtml(data.pilots.join(', '))}</div>\n        <div class="small">Prove libere: ${data.freeHeatSize} piloti per heat</div>\n        <div class="small">Qualifiche: ${data.qualHeatSize} piloti per heat</div>\n        <div class="small">Finale: Doppia eliminazione — ${data.finalType} piloti</div>\n        ${ (data.pilots.length > data.finalType) ? `<div class="small">Finaline: ${data.numAdvance} avanzano — heat da ${data.finalHeatSize}</div>` : '' }
       `;
     }
 
     function confirmAndSend() {
+      $('#createLoading').show();
+
       const selected = getSelectedPilots();
       const payload = {
-        name: eventNameEl.value || 'Untitled Event',
+        eventName: eventNameEl.value || 'Untitled Event',
         pilots: selected.map(p => Object({id: p.dataset.id, callsign: p.dataset.callsign})),
         settings: {
           freeHeatSize: parseInt(freeHeatSizeEl.value, 10),
@@ -486,20 +647,72 @@
 
       fetch('/orchestrator/create_event', {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(payload)
       })
       .then(async res => {
-        if (!res.ok) throw new Error('Server error: '+res.status);
+        if (!res.ok) throw new Error('Server error: ' + res.status);
         const data = await res.json();
-        appendLog('Evento creato con successo: ' + (data.id ? `id=${data.id}` : JSON.stringify(data)));
-        overlay.style.display = 'none';
+        if (data.success) {
+          appendLog('Evento creato con successo: ' + JSON.stringify(data, null, 2));
+          overlay.style.display = 'none';
+          $('#createLoading').hide();
+          loadEvents();  // aggiorna lista eventi
+        } else {
+          appendLog('Errore durante la creazione dell\'evento: ' + JSON.stringify(data, null, 2));
+          alert('Errore durante la creazione dell\'evento: ' + data.error);
+        }
       })
       .catch(err => {
         appendLog("Errore durante l'invio: " + err.message, true);
-        alert('Errore durante l\'invio verso RotorHazard: '+err.message);
+        alert('Errore durante l\'invio verso RotorHazard: ' + err.message);
+        $('#createLoading').hide();
       });
     }
+
+    // delete event handling
+    var deleteEventId = null;
+    function showDeleteConfirm(id) {
+      deleteEventId = id;
+      $('#deleteConfirm').removeClass('hidden').fadeIn();
+    }
+    $('#delNo').click(() => $('#deleteConfirm').fadeOut());
+    $('#delYes').click(function() {
+      $('#deleteLoading').show();
+
+      const payload = {
+        eventName: deleteEventId
+      };
+
+      // mostra log locale
+      appendLog('Invio richiesta al server RotorHazard...');
+      appendLog(JSON.stringify(payload, null, 2));
+
+      fetch('/orchestrator/delete_event', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      })
+      .then(async res => {
+        if (!res.ok) throw new Error('Server error: ' + res.status);
+        const data = await res.json();
+        if (data.success) {
+          appendLog('Evento cancellato con successo: ' + JSON.stringify(data, null, 2));
+          $('#deleteConfirm').fadeOut();
+          $('#deleteLoading').hide();
+          loadEvents();  // aggiorna lista eventi
+        } else {
+          appendLog('Errore durante la cancellazione dell\'evento: ' + JSON.stringify(data, null, 2));
+          alert('Errore durante la cancellazione dell\'evento: ' + data.error);
+        }
+      })
+      .catch(err => {
+        appendLog("Errore durante l'invio: " + err.message, true);
+        alert('Errore durante l\'invio verso RotorHazard: ' + err.message);
+        $('#deleteConfirm').fadeOut();
+        $('#deleteLoading').hide();
+      });
+    });
 
     function appendLog(msg, isError=false) {
       const t = new Date().toLocaleString();
