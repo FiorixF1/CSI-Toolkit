@@ -4,6 +4,9 @@
   <title>CSI Toolkit — Orchestrator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- Icons -->
+  <link rel="shortcut icon" href="/csi_toolkit/orchestrator/static/imgs/csi_logo.jpg">
+
   <!-- Scripts -->
   <script type="text/javascript" src="/static/jquery-3.6.4/jquery-3.6.4.min.js"></script>
   <script type="text/javascript" src="/static/articulate/articulate.min.js"></script>
@@ -18,205 +21,376 @@
 
   <style>
     :root {
-        font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
     }
     body {
-        margin: 0;
-        background: #0b1020;
-        color: #e6eef8;
-        display: flex;
-        align-items: flex-start;
-        gap: 24px;
-        padding: 32px
+      margin: 0;
+      background: #0b1020;
+      color: #e6eef8;
+      padding: 32px;
+      display: block;
+      padding-bottom: 80px;
     }
+
     .card {
-        background: #0f1724;
-        border: 1px solid rgba(255,255,255,0.04);
-        padding: 18px;
-        border-radius: 12px;
-        box-shadow: 0 6px 20px rgba(2,6,23,.6);
-        width: 760px
+      background: #0f1724;
+      border: 1px solid rgba(255,255,255,0.04);
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(2,6,23,.6);
+      width: 100%;                 /* full width */
+      max-width: 1200px;
+      margin: 0 auto;
     }
+
+    h1 {
+      margin: 0 0 12px 0;
+      font-size: 20px
+    }
+
     .event-card {
-        background: #0f1724;
-        border: 1px solid rgba(255,255,255,0.06);
-        padding: 14px;
-        border-radius: 10px;
-        margin-top: 12px;
+      background: linear-gradient(135deg, #10172f, #0b1220);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
+
+    .event-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+
     .event-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 6px;
+      font-size: 16px;
+      font-weight: 600;
     }
-    .event-options {
-        font-size: 13px;
-        color: #9fb0c7;
-        margin-bottom: 8px;
+
+    .event-subtitle {
+      font-size: 12px;
+      color: #9fb0c7;
     }
+
+    .event-body {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .event-section {
+      flex: 1;
+      min-width: 220px;
+      background: rgba(15,23,42,0.8);
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(148,163,184,0.25);
+    }
+
+    .event-section h4 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9fb0c7;
+      margin: 0 0 6px 0;
+    }
+
+    .event-section h5 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9fb0c7;
+      margin: 6px 0 2px 0;
+    }
+
+    .event-classes {
+      font-size: 13px;
+      color: #e2e8f0;
+      line-height: 1.4;
+    }
+
     .event-links a {
-        color: #06b6d4;
-        font-size: 13px;
-        display: block;
-        margin: 3px 0;
+      color: #06b6d4;
+      font-size: 12px;
+      display: block;
+      margin: 2px 0;
+      text-decoration: none;
     }
+
+    .event-links a:hover {
+      text-decoration: underline;
+    }
+
+    .event-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      justify-content: space-between;
+    }
+
     .export-btn {
-      margin-top: 6px;
       background: #06b6d4;
       border: none;
       color: #062027;
       padding: 6px 10px;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
     }
+
     .delete-btn {
-      margin-left: 8px;
       background: #d9534f;
       color: white;
       border: none;
       padding: 6px 10px;
       border-radius: 6px;
       cursor: pointer;
-    }
-    h1 {
-        margin: 0 0 12px 0;
-        font-size: 20px
-    }
-    button.primary {
-        background: #06b6d4;
-        border: none;
-        color: #062027;
-        padding: 10px 14px;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer
-    }
-    button.ghost {
-        background: transparent;
-        border: 1px solid rgba(255,255,255,0.06);
-        color: inherit;
-        padding: 8px 12px;
-        border-radius: 8px;
-        cursor: pointer
-    }
-    .muted {
-        color: #9fb0c7;
-        font-size: 13px
+      font-size: 13px;
+      font-weight: 500;
     }
 
-    /* modal */
-    .overlay {
-        position: fixed;
-        inset: 0;
-        background: linear-gradient(rgba(2,6,23,0.6),rgba(2,6,23,0.6));
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 50
+    .finalines-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #e2e8f0;
+      margin-top: 4px;
     }
-    .modal {
-        background: #08202a;
-        padding: 20px;
-        border-radius: 12px;
-        width: 640px;
-        max-width: 94%;
-        box-shadow: 0 10px 40px rgba(2,6,23,.6)
+
+    .finalines-toggle-row input {
+      width: auto;
     }
-    .row {
-        display: flex;
-        gap: 12px;
-        align-items: center
+
+    button.primary {
+      background: #06b6d4;
+      border: none;
+      color: #062027;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer
     }
-    .col {
-        display: flex;
-        flex-direction: column;
-        gap: 8px
+
+    button.ghost {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.06);
+      color: inherit;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer
     }
-    .pilots-list {
-        max-height: 210px;
-        overflow: auto;
-        border-radius: 8px;
-        padding: 8px;
-        background: #07181f;
-        border: 1px solid rgba(255,255,255,0.03)
+
+    .muted {
+      color: #9fb0c7;
+      font-size: 13px
     }
-    label.pilot {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 6px;
-        border-radius: 6px;
-        cursor: pointer
-    }
-    input[type='text'],select,input[type='number'] {
-        background: #02131a;
-        border: 1px solid rgba(255,255,255,0.04);
-        color: inherit;
-        padding: 8px;
-        border-radius: 8px
-    }
-    .footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 14px
-    }
-    .steps {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 14px
-    }
-    .step {
-        padding: 6px 10px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.02);
-        font-size: 13px
-    }
-    .hidden {
-        display: none
-    }
-    .note {
-        font-size: 13px;
-        color: #9fb0c7
-    }
+
     .small {
-        font-size: 12px;
-        color: #7da0b5
+      font-size: 12px;
+      color: #7da0b5
     }
-    .success {
-        color: #7ee787
-    }
+
     .error {
-        color: #ff7b7b
+      color: #fecaca;
     }
+
+    /* modal base */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(rgba(2,6,23,0.6),rgba(2,6,23,0.6));
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50
+    }
+
+    .modal {
+      background: #08202a;
+      padding: 20px;
+      border-radius: 12px;
+      width: 640px;
+      max-width: 94%;
+      box-shadow: 0 10px 40px rgba(2,6,23,.6)
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      align-items: center
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .pilots-list {
+      max-height: 210px;
+      overflow: auto;
+      border-radius: 8px;
+      padding: 8px;
+      background: #07181f;
+      border: 1px solid rgba(255,255,255,0.03)
+    }
+
+    label.pilot {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px;
+      border-radius: 6px;
+      cursor: pointer
+    }
+
+    input[type='text'],select,input[type='number'] {
+      background: #02131a;
+      border: 1px solid rgba(255,255,255,0.04);
+      color: inherit;
+      padding: 8px;
+      border-radius: 8px;
+      width: 100%;
+    }
+
+    .input-error {
+      border-color: #f97373 !important;
+      box-shadow: 0 0 0 1px rgba(248,113,113,0.4);
+    }
+
+    .footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 14px
+    }
+
+    .steps {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px
+    }
+
+    .step {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.02);
+      font-size: 13px
+    }
+
+    .hidden {
+      display: none
+    }
+
+    .note {
+      font-size: 13px;
+      color: #9fb0c7
+    }
+
+    .success {
+      color: #7ee787
+    }
+
     pre {
-        background: #03151a;
-        padding: 8px;
-        border-radius: 8px;
-        overflow: auto
+      background: #03151a;
+      padding: 8px;
+      border-radius: 8px;
+      overflow: auto
+    }
+
+    /* Barra di stato in fondo */
+    .status-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 40px;
+      background: rgba(15,23,42,0.96);
+      border-top: 1px solid rgba(148,163,184,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 12px;
+      color: #9fb0c7;
+      z-index: 60;
+    }
+
+    .status-bar .status-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-bar .status-right button {
+      font-size: 12px;
+      padding: 4px 10px;
+    }
+
+    /* Pannello log flottante in basso a sinistra */
+    .log-panel {
+      position: fixed;
+      left: 16px;
+      bottom: 52px;
+      width: 380px;
+      max-height: 220px;
+      background: #020617;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.6);
+      box-shadow: 0 10px 30px rgba(15,23,42,0.9);
+      font-size: 11px;
+      display: none;
+      z-index: 59;
+    }
+
+    /* Wizard error inline */
+    .wizard-error {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(248,113,113,0.6);
+      color: #fecaca;
+      font-size: 12px;
+    }
+
+    /* Wizard info inline */
+    .wizard-info {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(68,239,68,0.15);
+      border: 1px solid rgba(113,248,113,0.6);
+      color: #cafeca;
+      font-size: 12px;
     }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Orchestrator — CSI Toolkit</h1>
-    <p class="muted">Pannello per la creazione e gestione automatizzata di eventi con RotorHazard. Premi <strong>Crea evento</strong> per iniziare una procedura guidata.</p>
+    <p class="muted">
+      Pannello per la creazione e gestione automatizzata di eventi con RotorHazard.
+      Premi <strong>Crea evento</strong> per avviare il wizard.
+    </p>
 
     <div style="margin-top:18px">
       <button id="createBtn" class="primary">Crea evento</button>
     </div>
 
     <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
-      <h3>Eventi creati</h3>
+    <h3>Eventi creati</h3>
     <div id="eventsContainer" class="events-list"></div>
-
-    <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
-
-    <div class="small">Log delle comunicazioni verso il server:</div>
-    <pre id="log" style="height:160px"></pre>
   </div>
 
-  <!-- Overlay / Modal -->
+  <!-- Overlay / Modal (wizard) -->
   <div id="overlay" class="overlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="steps" id="wizardSteps">
@@ -251,6 +425,10 @@
       <!-- Step 2 -->
       <div id="step2" class="hidden">
         <h2>Parametri evento</h2>
+        <p class="small">
+          Queste impostazioni sono ottimali per una gara standard e andrebbero modificate
+          solo se necessario.
+        </p>
         <div class="col">
           <div class="row">
             <div style="flex:1">
@@ -293,13 +471,20 @@
                 <input id="finalHeatSize" type="number" min="2" max="6" value="4" />
               </div>
             </div>
-            <div class="small" style="margin-top:8px">Queste opzioni appaiono solo se ci sono più piloti del limite della finale selezionata.</div>
+            <div class="small" style="margin-top:8px">
+              Queste opzioni appaiono solo se ci sono più piloti del limite della finale selezionata.
+            </div>
           </div>
 
           <div class="footer">
-            <button id="back2" class="ghost">Indietro</button>
-            <button id="cancel2" class="ghost">Annulla</button>
-            <button id="next2" class="primary">Avanti</button>
+            <div style="flex:1;text-align:left;">
+              <button id="resetDefaults" class="ghost small">Default</button>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button id="back2" class="ghost">Indietro</button>
+              <button id="cancel2" class="ghost">Annulla</button>
+              <button id="next2" class="primary">Avanti</button>
+            </div>
           </div>
         </div>
       </div>
@@ -315,22 +500,38 @@
         </div>
       </div>
 
-      <div id="createLoading" class="small" style="margin-top:10px;display:none;">Elaborazione...</div>
+      <!-- Riga errori wizard -->
+      <div id="wizardError" class="wizard-error hidden"></div>
+
+      <!-- Riga info wizard -->
+      <div id="wizardInfo" class="wizard-info hidden">Elaborazione...</div>
     </div>
   </div>
 
   <!-- Delete Modal -->
-  <div id="deleteConfirm" class="overlay hidden" style="justify-content:center;align-items:center;">
+  <div id="deleteConfirm" class="overlay hidden">
     <div class="modal" style="max-width:400px;">
       <h3>Confermi di voler cancellare l'evento?</h3>
-      <p class="small">Questa operazione è irreversibile.</p>
+      <p class="small">Questa operazione è irreversibile e cancellerà TUTTE LE HEAT ed eventuali gare svolte!</p>
       <div style="text-align:right;margin-top:12px;">
         <button id="delNo" class="ghost">Annulla</button>
         <button id="delYes" class="primary" style="background:#d9534f;color:white;">Cancella</button>
       </div>
-      <div id="deleteLoading" class="small" style="margin-top:10px;display:none;">Elaborazione...</div>
+      <div id="deleteLoading" class="wizard-info small hidden">Elaborazione...</div>
     </div>
   </div>
+
+  <!-- Barra di stato + Log -->
+  <div class="status-bar">
+    <div class="status-left">
+      <button id="toggleLog" class="ghost">Log server</button>
+    </div>
+    <div class="status-right">
+      <span>CSI Toolkit version 1.0 by Fiorix</span>
+    </div>
+  </div>
+
+  <pre id="log" class="log-panel">Nessun messaggio.</pre>
 
   <script>
     var data_dependencies = [
@@ -347,6 +548,29 @@
     var classes;
     var events = [];
 
+    const overlay = document.getElementById('overlay');
+    const pilotsListEl = document.getElementById('pilotsList');
+    const selectedCountEl = document.getElementById('selectedCount');
+    const logEl = document.getElementById('log');
+    const deleteConfirm = document.getElementById('deleteConfirm');
+
+    // wizard steps
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+
+    // forms
+    const eventNameEl = document.getElementById('eventName');
+    const freeHeatSizeEl = document.getElementById('freeHeatSize');
+    const qualHeatSizeEl = document.getElementById('qualHeatSize');
+    const finalTypeEl = document.getElementById('finalType');
+    const finalinesOptionsEl = document.getElementById('finalinesOptions');
+    const numAdvanceEl = document.getElementById('numAdvance');
+    const finalHeatSizeEl = document.getElementById('finalHeatSize');
+    const summaryEl = document.getElementById('summary');
+    const wizardErrorEl = document.getElementById('wizardError');
+    const wizardInfoEl = document.getElementById('wizardInfo');
+
     $(document).ready(function () {
       socket.on('language', function (msg) {
         if (msg.language) {
@@ -356,7 +580,6 @@
 
       socket.on('pilot_data', function (msg) {
         pilots = msg.pilots;
-
         // sort by callsign
         pilots.sort((a, b) => a.callsign.localeCompare(b.callsign));
       });
@@ -365,12 +588,49 @@
         classes = msg.classes;
         loadEvents();
       });
+
+      $('#createBtn').click(function () {
+        populatePilots();
+        openModal();
+      });
+
+      $('#cancel1,#cancel2,#cancel3').click(closeModal);
+      document.getElementById('next1').addEventListener('click', gotoStep2);
+      document.getElementById('back2').addEventListener('click', gotoStep1);
+      document.getElementById('next2').addEventListener('click', gotoStep3);
+      document.getElementById('back3').addEventListener('click', gotoStep2);
+      document.getElementById('confirm').addEventListener('click', confirmAndSend);
+
+      document.getElementById('resetDefaults').addEventListener('click', resetDefaults);
+
+      finalTypeEl.addEventListener('change', () => {
+        const currentSelected = getSelectedPilots().length;
+        checkFinalinesVisibility(currentSelected);
+      });
+
+      eventNameEl.addEventListener('input', () => {
+        eventNameEl.classList.remove('input-error');
+        clearWizardError();
+      });
+
+      // Toggle log
+      $('#toggleLog').click(function () {
+        $('#log').toggle();
+      });
+
+      // Chiudi wizard cliccando fuori
+      overlay.addEventListener('click', (e)=>{ if (e.target === overlay) closeModal(); });
+
+      // Delete modal buttons + Chiudi cliccando ffuori
+      $('#delNo').click(() => $('#deleteConfirm').css('display','none'));
+      deleteConfirm.addEventListener('click', (e)=>{ if (e.target === deleteConfirm) $('#deleteConfirm').css('display','none'); });
     });
 
     // Rendering eventi esistenti
     function loadEvents() {
       $('#eventsContainer').html('<div class="small">Caricamento...</div>');
       $.getJSON('/orchestrator/get_events', function(data) {
+        appendLog('Eventi estratti dal server: ' + JSON.stringify(data, null, 2));
         events = data;
         renderEvents();
       });
@@ -389,43 +649,81 @@
           },
           bracket_type: "multigp16" | "ddr8de"
       }];*/
-      if (events.length === 0 || !events.success) {
+      if (!events || events.length === 0 || !events.success) {
         box.html('<div class="small">Nessun evento.</div>');
         return;
       }
 
-      events.data.forEach(ev=>{
-        const init_html = `
-          <div class="event-card" data-eventid="${ev.name}">
-            <div class="event-title">${ev.name}</div>
-            <div class="event-options">`;
-        const middle_html = `<div>
+      events.data.forEach(ev => {
+        const hasSmallFinal = !!ev.classes.small_final;
+
+        const classesHtml = `
+          <div class="event-section">
+            <h4>Classi evento</h4>
+            <div class="event-classes">
               <b>Prove libere:</b> ${ev.classes.free_practice.name} (${ev.classes.free_practice.id})<br>
               <b>Qualifiche:</b> ${ev.classes.qualifier.name} (${ev.classes.qualifier.id})<br>
               <b>Finali:</b> ${ev.classes.final.name} (${ev.classes.final.id})<br>
-              <b>Finaline:</b> ${ev.classes.small_final?.name} (${ev.classes.small_final?.id})
-            </div>`;
-        const fini_html = `<div class="event-links">
+              ${hasSmallFinal ? `<b>Finaline:</b> ${ev.classes.small_final.name} (${ev.classes.small_final.id})` : ''}
+            </div>
+          </div>`;
+
+        const linksHtml = `
+          <div class="event-section">
+            <h4>Overlay OBS</h4>
+            <div class="event-links">
               <a href="/ddr_overlays/stream/results">Live Results</a>
               <a href="/ddr_overlays/stream/bar_vertical">Status Bar Vertical</a>
               <a href="/ddr_overlays/stream/bar_horizontal">Status Bar Horizontal</a>
-              <a href="/ddr_overlays/stream/last_heat/${ev.bracket_type}/0">Last Heat (brackets)</a>
-              <a href="/ddr_overlays/stream/next_up/${ev.bracket_type}/0">Next Up (brackets)</a>
-              <a href="/ddr_overlays/stream/last_heat/bumpup/0">Last Heat (bump up)</a>
-              <a href="/ddr_overlays/stream/next_up/bumpup/0">Next Up (bump up)</a>
-              <a href="/ddr_overlays/stream/brackets/${ev.bracket_type}/${ev.classes.final.id}">Brackets</a>
-              <a href="/ddr_overlays/stream/leaderboard_pages/${ev.bracket_type}/${ev.classes.qualifier.id}">Leaderboard Qualifiche</a>
-              <a href="/ddr_overlays/stream/podium/${ev.bracket_type}/${ev.classes.final.id}">Podio Finali</a>
             </div>
+            <h5>Qualifiche</h5>
+            <div class="event-links">
+              <a href="/ddr_overlays/stream/leaderboard_pages/${ev.bracket_type}/${ev.classes.qualifier.id}">Leaderboard</a>
+            </div>
+            <h5>Finali (brackets)</h5>
+            <div class="event-links">
+              <a href="/ddr_overlays/stream/last_heat/${ev.bracket_type}/0">Last Heat</a>
+              <a href="/ddr_overlays/stream/next_up/${ev.bracket_type}/0">Next Up</a>
+              <a href="/ddr_overlays/stream/brackets/${ev.bracket_type}/${ev.classes.final.id}">Brackets</a>
+              <a href="/ddr_overlays/stream/podium/${ev.bracket_type}/${ev.classes.final.id}">Podium</a>
+            </div>
+            ${hasSmallFinal ? `<h5>Finaline (bump up)</h5>
+            <div class="event-links">
+              <a href="/ddr_overlays/stream/last_heat/bumpup/0">Last Heat</a>
+              <a href="/ddr_overlays/stream/next_up/bumpup/0">Next Up</a>
+            </div>` : ''}
+          </div>`;
 
+        const actionsHtml = `
+          <div class="event-section event-actions">
+            <h4>Azioni</h4>
             <button class="export-btn">Esporta risultati</button>
             <button class="delete-btn">Cancella evento</button>
+            <div class="finalines-toggle-row">
+              ${hasSmallFinal ? `
+              <input type="checkbox" class="finalines-toggle" "checked">
+              <label>Abilita finaline</label>` : ''}
+            </div>
           </div>`;
-        box.append(init_html+middle_html+fini_html);
+
+        const html = `
+          <div class="event-card" data-eventid="${ev.name}">
+            <div class="event-header">
+              <div class="event-title">${ev.name}</div>
+              <div class="event-subtitle">Bracket: ${ev.bracket_type}</div>
+            </div>
+            <div class="event-body">
+              ${classesHtml}
+              ${linksHtml}
+              ${actionsHtml}
+            </div>
+          </div>`;
+
+        box.append(html);
       });
 
       // bind export buttons
-      $('.export-btn').click(function() {
+      $('.export-btn').off('click').on('click', function() {
         const card = $(this).closest('.event-card');
         const id = card.data('eventid');  // the ID is the event name, not a separate number
 
@@ -433,8 +731,7 @@
           eventName: id
         };
 
-        // mostra log locale
-        appendLog('Invio richiesta al server RotorHazard...');
+        appendLog('Invio richiesta al server RotorHazard (export)...');
         appendLog(JSON.stringify(payload, null, 2));
 
         fetch('/orchestrator/export_results', {
@@ -460,65 +757,55 @@
       });
 
       // bind delete buttons
-      $('.delete-btn').click(function() {
+      $('.delete-btn').off('click').on('click', function() {
         const card = $(this).closest('.event-card');
         const id = card.data('eventid');  // the ID is the event name, not a separate number
         showDeleteConfirm(id);
       });
+
+      // bind finalines toggle (solo UI + log, backend lo gestirai tu)
+      $('.finalines-toggle').off('change').on('change', function() {
+        const card = $(this).closest('.event-card');
+        const id = card.data('eventid');
+        const enabled = $(this).is(':checked');
+
+        const payload = {
+          eventName: id,
+          enabled: enabled
+        };
+
+        appendLog('Cambio stato finaline...');
+        appendLog(JSON.stringify(payload, null, 2));
+
+        // esempio di chiamata, endpoint da definire lato server se vuoi usarlo
+        fetch('/orchestrator/set_small_final_enabled', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        }).catch(()=>{ /* opzionale, puoi gestire errori in futuro */ });
+      });
     }
-
-    // --- helper DOM ---
-    const overlay = document.getElementById('overlay');
-    const createBtn = document.getElementById('createBtn');
-    const pilotsListEl = document.getElementById('pilotsList');
-    const selectedCountEl = document.getElementById('selectedCount');
-    const logEl = document.getElementById('log');
-
-    // wizard steps
-    const step1 = document.getElementById('step1');
-    const step2 = document.getElementById('step2');
-    const step3 = document.getElementById('step3');
-
-    // forms
-    const eventNameEl = document.getElementById('eventName');
-    const freeHeatSizeEl = document.getElementById('freeHeatSize');
-    const qualHeatSizeEl = document.getElementById('qualHeatSize');
-    const finalTypeEl = document.getElementById('finalType');
-    const finalinesOptionsEl = document.getElementById('finalinesOptions');
-    const numAdvanceEl = document.getElementById('numAdvance');
-    const finalHeatSizeEl = document.getElementById('finalHeatSize');
-    const summaryEl = document.getElementById('summary');
-
-    // buttons
-    document.getElementById('cancel1').addEventListener('click', closeModal);
-    document.getElementById('cancel2').addEventListener('click', closeModal);
-    document.getElementById('cancel3').addEventListener('click', closeModal);
-
-    document.getElementById('next1').addEventListener('click', gotoStep2);
-    document.getElementById('back2').addEventListener('click', gotoStep1);
-    document.getElementById('next2').addEventListener('click', gotoStep3);
-    document.getElementById('back3').addEventListener('click', gotoStep2);
-
-    document.getElementById('confirm').addEventListener('click', confirmAndSend);
-
-    // mostra modal
-    createBtn.addEventListener('click', () => {
-      populatePilots();
-      openModal();
-    });
 
     // populate pilots list
     function populatePilots() {
       pilotsListEl.innerHTML = '';
+      if (!pilots) return;
       pilots.forEach((p, idx) => {
         const id = 'pilot_'+idx;
         const label = document.createElement('label');
         label.className = 'pilot';
-        label.innerHTML = `\n          <input type="checkbox" id="${id}" data-id="${p.pilot_id}" data-callsign="${p.callsign}" />\n          <span>${p.callsign}</span>\n        `;
+        label.innerHTML = `
+          <input type="checkbox" id="${id}" data-id="${p.pilot_id}" data-callsign="${p.callsign}" />
+          <span>${p.callsign}</span>
+        `;
         pilotsListEl.appendChild(label);
         label.querySelector('input').addEventListener('change', updateSelectedCount);
       });
       updateSelectedCount();
+    }
+
+    function getSelectedPilots() {
+      return Array.from(pilotsListEl.querySelectorAll('input[type=checkbox]')).filter(c => c.checked);
     }
 
     function updateSelectedCount() {
@@ -538,73 +825,88 @@
       }
     }
 
-    finalTypeEl.addEventListener('change', () => {
-      const currentSelected = getSelectedPilots().length;
-      checkFinalinesVisibility(currentSelected);
-    });
-
     // modal control
     function openModal() {
       overlay.style.display = 'flex';
       overlay.setAttribute('aria-hidden','false');
       gotoStep1();
+      clearWizardError();
     }
+
     function closeModal() {
       overlay.style.display = 'none';
       overlay.setAttribute('aria-hidden','true');
       // reset forms
       eventNameEl.value = '';
-      freeHeatSizeEl.value = '4';
-      qualHeatSizeEl.value = '4';
-      finalTypeEl.value = '16';
-      numAdvanceEl.value = '2';
-      finalHeatSizeEl.value = '4';
+      eventNameEl.classList.remove('input-error');
+      resetDefaults();
+      clearWizardError();
     }
 
     function gotoStep1() {
       step1.classList.remove('hidden');
       step2.classList.add('hidden');
       step3.classList.add('hidden');
+      clearWizardError();
     }
+
     function gotoStep2() {
-      // validazione: almeno 2 piloti
-      const selected = getSelectedPilots();
-      if (selected.length < 2) {
-        alert('Seleziona almeno 2 piloti per creare un evento.');
+      clearWizardError();
+      const name = eventNameEl.value.trim();
+      if (!name) {
+        eventNameEl.classList.add('input-error');
+        showWizardError('Inserisci un nome per l\'evento.');
+        eventNameEl.focus();
         return;
       }
+
+      const selected = getSelectedPilots();
+      if (selected.length < 2) {
+        showWizardError('Seleziona almeno 2 piloti per creare un evento.');
+        return;
+      }
+
+      // seleziona automaticamente valore consigliato per le finali
+      if (selected.length < 12) {
+        finalTypeEl.value = '8';
+      } else {
+        finalTypeEl.value = '16';
+      }
+
       step1.classList.add('hidden');
       step2.classList.remove('hidden');
       step3.classList.add('hidden');
       // update finalines visibility
       checkFinalinesVisibility(selected.length);
     }
+
     function gotoStep3() {
-      // validazione dei parametri
+      clearWizardError();
+
       const numAdvance = parseInt(numAdvanceEl.value, 10);
       const finalHeatSize = parseInt(finalHeatSizeEl.value, 10);
-      if (numAdvance >= finalHeatSize) {
-        alert('I piloti che avanzano nelle finaline devono essere inferiori ai piloti della heat.');
-        return;
+      if (!finalinesOptionsEl.classList.contains('hidden')) {
+        if (numAdvance >= finalHeatSize) {
+          showWizardError('I piloti che avanzano nelle finaline devono essere inferiori ai piloti della heat.');
+          return;
+        }
       }
+
       const numPilots = getSelectedPilots().length;
       const finalType = parseInt(finalTypeEl.value, 10);
       if (finalType == 16 && numPilots < 12) {
-        alert('Per le finali a doppia eliminazione da 16 piloti sono richiesti almeno 12 piloti partecipanti.');
+        showWizardError('Per le finali a doppia eliminazione da 16 piloti sono richiesti almeno 12 piloti partecipanti.');
         return;
       }
       if (finalType == 8 && numPilots < 6) {
-        alert('Per le finali a doppia eliminazione da 8 piloti sono richiesti almeno 6 piloti partecipanti.');
+        showWizardError('Per le finali a doppia eliminazione da 8 piloti sono richiesti almeno 6 piloti partecipanti.');
         return;
       }
+
       step1.classList.add('hidden');
       step2.classList.add('hidden');
       step3.classList.remove('hidden');
       renderSummary();
-    }
-
-    function getSelectedPilots() {
-      return Array.from(pilotsListEl.querySelectorAll('input[type=checkbox]')).filter(c => c.checked);
     }
 
     function renderSummary() {
@@ -618,12 +920,34 @@
         numAdvance: parseInt(numAdvanceEl.value, 10),
         finalHeatSize: parseInt(finalHeatSizeEl.value, 10)
       };
-      summaryEl.innerHTML = `\n        <div class="small">Nome evento: <strong>${escapeHtml(data.eventName)}</strong></div>\n        <div class="small">Piloti (${data.pilots.length}): ${escapeHtml(data.pilots.join(', '))}</div>\n        <div class="small">Prove libere: ${data.freeHeatSize} piloti per heat</div>\n        <div class="small">Qualifiche: ${data.qualHeatSize} piloti per heat</div>\n        <div class="small">Finale: Doppia eliminazione — ${data.finalType} piloti</div>\n        ${ (data.pilots.length > data.finalType) ? `<div class="small">Finaline: ${data.numAdvance} avanzano — heat da ${data.finalHeatSize}</div>` : '' }
+      summaryEl.innerHTML = `
+        <div class="small">Nome evento: <strong>${escapeHtml(data.eventName)}</strong></div>
+        <div class="small">Piloti (${data.pilots.length}): ${escapeHtml(data.pilots.join(', '))}</div>
+        <div class="small">Prove libere: ${data.freeHeatSize} piloti per heat</div>
+        <div class="small">Qualifiche: ${data.qualHeatSize} piloti per heat</div>
+        <div class="small">Finale: Doppia eliminazione — ${data.finalType} piloti</div>
+        ${ (data.pilots.length > data.finalType) ? `<div class="small">Finaline: ${data.numAdvance} avanzano — heat da ${data.finalHeatSize}</div>` : '' }
       `;
     }
 
+    function resetDefaults() {
+      var selected = getSelectedPilots();
+      freeHeatSizeEl.value = '4';
+      qualHeatSizeEl.value = '4';
+      if (selected.length < 12) {
+        finalTypeEl.value = '8';
+      } else {
+        finalTypeEl.value = '16';
+      }
+      numAdvanceEl.value = '2';
+      finalHeatSizeEl.value = '4';
+      checkFinalinesVisibility(selected.length);
+      clearWizardError();
+    }
+
     function confirmAndSend() {
-      $('#createLoading').show();
+      showWizardInfo();
+      clearWizardError();
 
       const selected = getSelectedPilots();
       const payload = {
@@ -641,7 +965,6 @@
         payload.settings.finalHeatSize = parseInt(finalHeatSizeEl.value, 10);
       }
 
-      // mostra log locale
       appendLog('Invio evento al server RotorHazard...');
       appendLog(JSON.stringify(payload, null, 2));
 
@@ -656,17 +979,18 @@
         if (data.success) {
           appendLog('Evento creato con successo: ' + JSON.stringify(data, null, 2));
           overlay.style.display = 'none';
-          $('#createLoading').hide();
+          clearWizardInfo();
           loadEvents();  // aggiorna lista eventi
         } else {
           appendLog('Errore durante la creazione dell\'evento: ' + JSON.stringify(data, null, 2));
-          alert('Errore durante la creazione dell\'evento: ' + data.error);
+          showWizardError('Errore durante la creazione dell\'evento: ' + (data.error || 'vedi log server.'));
+          clearWizardInfo();
         }
       })
       .catch(err => {
         appendLog("Errore durante l'invio: " + err.message, true);
-        alert('Errore durante l\'invio verso RotorHazard: ' + err.message);
-        $('#createLoading').hide();
+        showWizardError('Errore durante l\'invio verso RotorHazard: ' + err.message);
+        clearWizardInfo();
       });
     }
 
@@ -674,9 +998,9 @@
     var deleteEventId = null;
     function showDeleteConfirm(id) {
       deleteEventId = id;
-      $('#deleteConfirm').removeClass('hidden').fadeIn();
+      $('#deleteConfirm').removeClass('hidden').css('display','flex');
     }
-    $('#delNo').click(() => $('#deleteConfirm').fadeOut());
+
     $('#delYes').click(function() {
       $('#deleteLoading').show();
 
@@ -684,8 +1008,7 @@
         eventName: deleteEventId
       };
 
-      // mostra log locale
-      appendLog('Invio richiesta al server RotorHazard...');
+      appendLog('Invio richiesta al server RotorHazard (delete)...');
       appendLog(JSON.stringify(payload, null, 2));
 
       fetch('/orchestrator/delete_event', {
@@ -698,18 +1021,20 @@
         const data = await res.json();
         if (data.success) {
           appendLog('Evento cancellato con successo: ' + JSON.stringify(data, null, 2));
-          $('#deleteConfirm').fadeOut();
+          $('#deleteConfirm').css('display','none');
           $('#deleteLoading').hide();
-          loadEvents();  // aggiorna lista eventi
+          loadEvents();
         } else {
           appendLog('Errore durante la cancellazione dell\'evento: ' + JSON.stringify(data, null, 2));
           alert('Errore durante la cancellazione dell\'evento: ' + data.error);
+          $('#deleteConfirm').css('display','none');
+          $('#deleteLoading').hide();
         }
       })
       .catch(err => {
         appendLog("Errore durante l'invio: " + err.message, true);
         alert('Errore durante l\'invio verso RotorHazard: ' + err.message);
-        $('#deleteConfirm').fadeOut();
+        $('#deleteConfirm').css('display','none');
         $('#deleteLoading').hide();
       });
     });
@@ -719,12 +1044,27 @@
       logEl.textContent = `${t} - ${msg}\n\n` + logEl.textContent;
     }
 
+    function showWizardError(msg) {
+      wizardErrorEl.textContent = msg;
+      wizardErrorEl.classList.remove('hidden');
+    }
+
+    function clearWizardError() {
+      wizardErrorEl.textContent = '';
+      wizardErrorEl.classList.add('hidden');
+    }
+
+    function showWizardInfo() {
+      wizardInfoEl.classList.remove('hidden');
+    }
+
+    function clearWizardInfo() {
+      wizardInfoEl.classList.add('hidden');
+    }
+
     function escapeHtml(s) {
       return String(s).replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     }
-
-    // close overlay when clicking outside modal
-    overlay.addEventListener('click', (e)=>{ if (e.target === overlay) closeModal(); });
 
   </script>
 </body>

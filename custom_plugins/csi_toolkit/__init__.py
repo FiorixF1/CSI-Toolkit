@@ -252,6 +252,9 @@ def initialize(rhapi):
             if ':' in name:
                 new_name = name[:name.index(':')]
                 rhapi.db.heat_alter(heat.id, name=new_name)
+            if '-' in name:
+                new_name = name[:name.index('-')]
+                rhapi.db.heat_alter(heat.id, name=new_name)
 
         ### FINALINE ###
 
@@ -315,15 +318,18 @@ def initialize(rhapi):
 
     @bp.route("/orchestrator/get_events")
     def get_events():
-        bracket_type = 'none'
         events = dict()
         for raceclass in rhapi.db.raceclasses:
             event_name = rhapi.db.raceclass_attribute_value(raceclass, "orchestrator_event_name")
             class_type = rhapi.db.raceclass_attribute_value(raceclass, "orchestrator_class_type")
             if event_name:
                 if not events.get(event_name):
-                    events[event_name] = dict()
-                events[event_name][class_type] = {
+                    events[event_name] = {
+                        "name": event_name,
+                        "classes": dict(),
+                        "bracket_type": 'none'
+                    }
+                events[event_name]["classes"][class_type] = {
                     "id": raceclass.id,
                     "name": raceclass.name
                 }
@@ -331,16 +337,18 @@ def initialize(rhapi):
                 if class_type == ClassType.FINAL:
                     number_of_final_heats = len(rhapi.db.heats_by_class(raceclass.id))
                     if number_of_final_heats == 14:
-                        bracket_type = 'multigp16'
+                        events[event_name]["bracket_type"] = 'multigp16'
                     elif number_of_final_heats == 6:
-                        bracket_type = 'ddr8de'
+                        events[event_name]["bracket_type"] = 'ddr8de'
+                    else:
+                        events[event_name]["bracket_type"] = 'none'
 
         result = []
         for event_name in events:
             this_event = {
                 "name": event_name,
-                "classes": events[event_name],
-                "bracket_type": bracket_type
+                "bracket_type": events[event_name].pop("bracket_type"),
+                "classes": events[event_name].pop("classes"),
             }
             result.append(this_event)
 
