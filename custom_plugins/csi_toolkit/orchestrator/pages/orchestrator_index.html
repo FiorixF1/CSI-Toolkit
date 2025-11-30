@@ -38,7 +38,7 @@
       padding: 18px;
       border-radius: 12px;
       box-shadow: 0 6px 20px rgba(2,6,23,.6);
-      width: 100%;                 /* full width */
+      width: 100%;
       max-width: 1200px;
       margin: 0 auto;
     }
@@ -155,6 +155,12 @@
       font-weight: 500;
     }
 
+    .reassign-btn {
+      margin-top: 8px;
+      font-size: 12px;
+      padding: 5px 10px;
+    }
+
     .finalines-toggle-row {
       display: flex;
       align-items: center;
@@ -175,7 +181,7 @@
       padding: 10px 14px;
       border-radius: 8px;
       font-weight: 600;
-      cursor: pointer
+      cursor: pointer;
     }
 
     button.ghost {
@@ -184,7 +190,7 @@
       color: inherit;
       padding: 8px 12px;
       border-radius: 8px;
-      cursor: pointer
+      cursor: pointer;
     }
 
     .muted {
@@ -201,7 +207,7 @@
       color: #fecaca;
     }
 
-    /* modal base */
+    /* Modal base */
     .overlay {
       position: fixed;
       inset: 0;
@@ -209,7 +215,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 50
+      z-index: 50;
     }
 
     .modal {
@@ -218,19 +224,19 @@
       border-radius: 12px;
       width: 640px;
       max-width: 94%;
-      box-shadow: 0 10px 40px rgba(2,6,23,.6)
+      box-shadow: 0 10px 40px rgba(2,6,23,.6);
     }
 
     .row {
       display: flex;
       gap: 12px;
-      align-items: center
+      align-items: center;
     }
 
     .col {
       display: flex;
       flex-direction: column;
-      gap: 8px
+      gap: 8px;
     }
 
     .pilots-list {
@@ -239,7 +245,7 @@
       border-radius: 8px;
       padding: 8px;
       background: #07181f;
-      border: 1px solid rgba(255,255,255,0.03)
+      border: 1px solid rgba(255,255,255,0.03);
     }
 
     label.pilot {
@@ -248,7 +254,7 @@
       gap: 10px;
       padding: 6px;
       border-radius: 6px;
-      cursor: pointer
+      cursor: pointer;
     }
 
     input[type='text'],select,input[type='number'] {
@@ -269,40 +275,40 @@
       display: flex;
       justify-content: flex-end;
       gap: 10px;
-      margin-top: 14px
+      margin-top: 14px;
     }
 
     .steps {
       display: flex;
       gap: 12px;
-      margin-bottom: 14px
+      margin-bottom: 14px;
     }
 
     .step {
       padding: 6px 10px;
       border-radius: 999px;
       background: rgba(255,255,255,0.02);
-      font-size: 13px
+      font-size: 13px;
     }
 
     .hidden {
-      display: none
+      display: none;
     }
 
     .note {
       font-size: 13px;
-      color: #9fb0c7
+      color: #9fb0c7;
     }
 
     .success {
-      color: #7ee787
+      color: #7ee787;
     }
 
     pre {
       background: #03151a;
       padding: 8px;
       border-radius: 8px;
-      overflow: auto
+      overflow: auto;
     }
 
     /* Barra di stato in fondo */
@@ -370,6 +376,13 @@
       border: 1px solid rgba(113,248,113,0.6);
       color: #cafeca;
       font-size: 12px;
+    }
+
+    /* Stato disabilitato (busy) */
+    .disabled-state {
+      opacity: 0.5 !important;
+      pointer-events: none !important;
+      filter: grayscale(0.3);
     }
   </style>
 </head>
@@ -512,12 +525,59 @@
   <div id="deleteConfirm" class="overlay hidden">
     <div class="modal" style="max-width:400px;">
       <h3>Confermi di voler cancellare l'evento?</h3>
-      <p class="small">Questa operazione è irreversibile e cancellerà TUTTE LE HEAT ed eventuali gare svolte!</p>
+      <p class="small">Questa operazione è irreversibile. Eventuali gare svolte NON saranno cancellate.</p>
       <div style="text-align:right;margin-top:12px;">
         <button id="delNo" class="ghost">Annulla</button>
         <button id="delYes" class="primary" style="background:#d9534f;color:white;">Cancella</button>
       </div>
       <div id="deleteLoading" class="wizard-info small hidden">Elaborazione...</div>
+    </div>
+  </div>
+
+  <!-- Reassign Classes Modal -->
+  <div id="reassignOverlay" class="overlay hidden">
+    <div class="modal" style="max-width:520px;">
+      <h3>Riassegna classi evento</h3>
+      <p class="small">
+        ⚠ Questa funzione serve solo per correggere configurazioni errate di RotorHazard.
+        Non utilizzarla a meno che tu sappia esattamente cosa stai facendo.
+      </p>
+      <div id="reassignEventName" class="small" style="margin-bottom:6px;"></div>
+
+      <div class="col" style="gap:8px;">
+        <div class="row">
+          <div style="flex:1" class="small">Prove libere:</div>
+          <div style="flex:2">
+            <select id="reassignFree"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div style="flex:1" class="small">Qualifiche:</div>
+          <div style="flex:2">
+            <select id="reassignQual"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div style="flex:1" class="small">Finali:</div>
+          <div style="flex:2">
+            <select id="reassignFinal"></select>
+          </div>
+        </div>
+        <div class="row" id="reassignSmallRow">
+          <div style="flex:1" class="small">Finaline:</div>
+          <div style="flex:2">
+            <select id="reassignSmall"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button id="reassignCancel" class="ghost">Annulla</button>
+        <button id="reassignApply" class="primary">Applica</button>
+      </div>
+
+      <div id="reassignError" class="wizard-error hidden"></div>
+      <div id="reassignLoading" class="wizard-info small hidden">Elaborazione...</div>
     </div>
   </div>
 
@@ -553,6 +613,7 @@
     const selectedCountEl = document.getElementById('selectedCount');
     const logEl = document.getElementById('log');
     const deleteConfirm = document.getElementById('deleteConfirm');
+    const reassignOverlay = document.getElementById('reassignOverlay');
 
     // wizard steps
     const step1 = document.getElementById('step1');
@@ -570,6 +631,20 @@
     const summaryEl = document.getElementById('summary');
     const wizardErrorEl = document.getElementById('wizardError');
     const wizardInfoEl = document.getElementById('wizardInfo');
+
+    // reassign popup elements
+    const reassignEventNameEl = document.getElementById('reassignEventName');
+    const reassignErrorEl = document.getElementById('reassignError');
+    const reassignLoadingEl = document.getElementById('reassignLoading');
+    const reassignFreeEl = document.getElementById('reassignFree');
+    const reassignQualEl = document.getElementById('reassignQual');
+    const reassignFinalEl = document.getElementById('reassignFinal');
+    const reassignSmallEl = document.getElementById('reassignSmall');
+    const reassignSmallRow = document.getElementById('reassignSmallRow');
+
+    let reassignEventName = null;
+    let reassignHasSmallFinal = false;
+    let reassignBusy = false;
 
     $(document).ready(function () {
       socket.on('language', function (msg) {
@@ -621,9 +696,14 @@
       // Chiudi wizard cliccando fuori
       overlay.addEventListener('click', (e)=>{ if (e.target === overlay) closeModal(); });
 
-      // Delete modal buttons + Chiudi cliccando ffuori
+      // Delete modal buttons + Chiudi cliccando fuori
       $('#delNo').click(() => $('#deleteConfirm').css('display','none'));
       deleteConfirm.addEventListener('click', (e)=>{ if (e.target === deleteConfirm) $('#deleteConfirm').css('display','none'); });
+
+      // Reassign modal buttons + Chiudi cliccando fuori
+      $('#reassignCancel').click(() => closeReassignModal());
+      reassignOverlay.addEventListener('click', (e)=>{ if (e.target === reassignOverlay) closeReassignModal(); });
+      $('#reassignApply').click(() => applyReassignClasses());
     });
 
     // Rendering eventi esistenti
@@ -649,77 +729,88 @@
           },
           bracket_type: "multigp16" | "ddr8de"
       }];*/
-      if (!events || events.length === 0 || !events.success) {
+      if (!events || !events.success || events.data.length === 0) {
         box.html('<div class="small">Nessun evento.</div>');
         return;
       }
 
       events.data.forEach(ev => {
+        const isValid = !!ev.classes.free_practice && !!ev.classes.qualifier && !!ev.classes.final;
         const hasSmallFinal = !!ev.classes.small_final;
 
-        const classesHtml = `
-          <div class="event-section">
-            <h4>Classi evento</h4>
-            <div class="event-classes">
-              <b>Prove libere:</b> ${ev.classes.free_practice.name} (${ev.classes.free_practice.id})<br>
-              <b>Qualifiche:</b> ${ev.classes.qualifier.name} (${ev.classes.qualifier.id})<br>
-              <b>Finali:</b> ${ev.classes.final.name} (${ev.classes.final.id})<br>
-              ${hasSmallFinal ? `<b>Finaline:</b> ${ev.classes.small_final.name} (${ev.classes.small_final.id})` : ''}
-            </div>
-          </div>`;
+        if (isValid) {
+          const classesHtml = `
+            <div class="event-section">
+              <h4>Classi evento</h4>
+              <div class="event-classes class-block"
+                   data-event-name="${ev.name}"
+                   data-free-id="${ev.classes.free_practice.id}"
+                   data-qual-id="${ev.classes.qualifier.id}"
+                   data-final-id="${ev.classes.final.id}"
+                   ${hasSmallFinal ? `data-small-id="${ev.classes.small_final.id}"` : ''}>
+                <b>Prove libere:</b> ${ev.classes.free_practice.name} (${ev.classes.free_practice.id})<br>
+                <b>Qualifiche:</b> ${ev.classes.qualifier.name} (${ev.classes.qualifier.id})<br>
+                <b>Finali:</b> ${ev.classes.final.name} (${ev.classes.final.id})<br>
+                ${hasSmallFinal ? `<b>Finaline:</b> ${ev.classes.small_final.name} (${ev.classes.small_final.id})` : ''}
+              </div>
+              <button class="ghost reassign-btn hidden">Riassegna classi</button>
+            </div>`;
 
-        const linksHtml = `
-          <div class="event-section">
-            <h4>Overlay OBS</h4>
-            <div class="event-links">
-              <a href="/ddr_overlays/stream/results">Live Results</a>
-              <a href="/ddr_overlays/stream/bar_vertical">Status Bar Vertical</a>
-              <a href="/ddr_overlays/stream/bar_horizontal">Status Bar Horizontal</a>
-            </div>
-            <h5>Qualifiche</h5>
-            <div class="event-links">
-              <a href="/ddr_overlays/stream/leaderboard_pages/${ev.bracket_type}/${ev.classes.qualifier.id}">Leaderboard</a>
-            </div>
-            <h5>Finali (brackets)</h5>
-            <div class="event-links">
-              <a href="/ddr_overlays/stream/last_heat/${ev.bracket_type}/0">Last Heat</a>
-              <a href="/ddr_overlays/stream/next_up/${ev.bracket_type}/0">Next Up</a>
-              <a href="/ddr_overlays/stream/brackets/${ev.bracket_type}/${ev.classes.final.id}">Brackets</a>
-              <a href="/ddr_overlays/stream/podium/${ev.bracket_type}/${ev.classes.final.id}">Podium</a>
-            </div>
-            ${hasSmallFinal ? `<h5>Finaline (bump up)</h5>
-            <div class="event-links">
-              <a href="/ddr_overlays/stream/last_heat/bumpup/0">Last Heat</a>
-              <a href="/ddr_overlays/stream/next_up/bumpup/0">Next Up</a>
-            </div>` : ''}
-          </div>`;
+          const linksHtml = `
+            <div class="event-section">
+              <h4>Overlay OBS</h4>
+              <div class="event-links">
+                <a href="/ddr_overlays/stream/results">Live Results</a>
+                <a href="/ddr_overlays/stream/bar_vertical">Status Bar Vertical</a>
+                <a href="/ddr_overlays/stream/bar_horizontal">Status Bar Horizontal</a>
+              </div>
+              <h5>Qualifiche</h5>
+              <div class="event-links">
+                <a href="/ddr_overlays/stream/leaderboard_pages/${ev.bracket_type}/${ev.classes.qualifier.id}">Leaderboard</a>
+              </div>
+              <h5>Finali (brackets)</h5>
+              <div class="event-links">
+                <a href="/ddr_overlays/stream/last_heat/${ev.bracket_type}/0">Last Heat</a>
+                <a href="/ddr_overlays/stream/next_up/${ev.bracket_type}/0">Next Up</a>
+                <a href="/ddr_overlays/stream/brackets/${ev.bracket_type}/${ev.classes.final.id}">Brackets</a>
+                <a href="/ddr_overlays/stream/podium/${ev.bracket_type}/${ev.classes.final.id}">Podium</a>
+              </div>
+              ${hasSmallFinal ? `<h5>Finaline (bump up)</h5>
+              <div class="event-links">
+                <a href="/ddr_overlays/stream/last_heat/bumpup/0">Last Heat</a>
+                <a href="/ddr_overlays/stream/next_up/bumpup/0">Next Up</a>
+              </div>` : ''}
+            </div>`;
 
-        const actionsHtml = `
-          <div class="event-section event-actions">
-            <h4>Azioni</h4>
-            <button class="export-btn">Esporta risultati</button>
-            <button class="delete-btn">Cancella evento</button>
-            <div class="finalines-toggle-row">
-              ${hasSmallFinal ? `
-              <input type="checkbox" class="finalines-toggle" "checked">
-              <label>Abilita finaline</label>` : ''}
-            </div>
-          </div>`;
+          const actionsHtml = `
+            <div class="event-section event-actions">
+              <h4>Azioni</h4>
+              <button class="export-btn">Esporta risultati</button>
+              <button class="delete-btn">Cancella evento</button>
+              <div class="finalines-toggle-row">
+                ${hasSmallFinal ? `
+                <input type="checkbox" class="finalines-toggle" checked>
+                <label>Abilita finaline</label>` : ''}
+              </div>
+            </div>`;
 
-        const html = `
-          <div class="event-card" data-eventid="${ev.name}">
-            <div class="event-header">
-              <div class="event-title">${ev.name}</div>
-              <div class="event-subtitle">Bracket: ${ev.bracket_type}</div>
-            </div>
-            <div class="event-body">
-              ${classesHtml}
-              ${linksHtml}
-              ${actionsHtml}
-            </div>
-          </div>`;
+          const html = `
+            <div class="event-card" data-eventid="${ev.name}">
+              <div class="event-header">
+                <div class="event-title">${ev.name}</div>
+                <div class="event-subtitle">Bracket: ${ev.bracket_type}</div>
+              </div>
+              <div class="event-body">
+                ${classesHtml}
+                ${linksHtml}
+                ${actionsHtml}
+              </div>
+            </div>`;
 
-        box.append(html);
+          box.append(html);
+        } else {
+          appendLog('Trovato evento incompleto: ' + JSON.stringify(ev, null, 2));
+        }
       });
 
       // bind export buttons
@@ -784,6 +875,18 @@
           body: JSON.stringify(payload)
         }).catch(()=>{ /* opzionale, puoi gestire errori in futuro */ });
       });
+
+      // bind reassign buttons
+      $('.reassign-btn').off('click').on('click', function() {
+        const section = $(this).closest('.event-section').find('.class-block');
+        const eventName = section.data('event-name');
+        const freeId = section.data('free-id');
+        const qualId = section.data('qual-id');
+        const finalId = section.data('final-id');
+        const smallId = section.data('small-id'); // può essere undefined
+
+        openReassignModal(eventName, freeId, qualId, finalId, smallId);
+      });
     }
 
     // populate pilots list
@@ -831,6 +934,7 @@
       overlay.setAttribute('aria-hidden','false');
       gotoStep1();
       clearWizardError();
+      setWizardBusy(false);
     }
 
     function closeModal() {
@@ -841,6 +945,7 @@
       eventNameEl.classList.remove('input-error');
       resetDefaults();
       clearWizardError();
+      setWizardBusy(false);
     }
 
     function gotoStep1() {
@@ -946,7 +1051,7 @@
     }
 
     function confirmAndSend() {
-      showWizardInfo();
+      setWizardBusy(true);
       clearWizardError();
 
       const selected = getSelectedPilots();
@@ -979,30 +1084,33 @@
         if (data.success) {
           appendLog('Evento creato con successo: ' + JSON.stringify(data, null, 2));
           overlay.style.display = 'none';
-          clearWizardInfo();
+          setWizardBusy(false);
           loadEvents();  // aggiorna lista eventi
         } else {
           appendLog('Errore durante la creazione dell\'evento: ' + JSON.stringify(data, null, 2));
           showWizardError('Errore durante la creazione dell\'evento: ' + (data.error || 'vedi log server.'));
-          clearWizardInfo();
+          setWizardBusy(false);
         }
       })
       .catch(err => {
         appendLog("Errore durante l'invio: " + err.message, true);
         showWizardError('Errore durante l\'invio verso RotorHazard: ' + err.message);
-        clearWizardInfo();
+        setWizardBusy(false);
       });
     }
 
     // delete event handling
     var deleteEventId = null;
+
     function showDeleteConfirm(id) {
       deleteEventId = id;
+      $('#deleteLoading').addClass('hidden');
+      setDeleteBusy(false);
       $('#deleteConfirm').removeClass('hidden').css('display','flex');
     }
 
     $('#delYes').click(function() {
-      $('#deleteLoading').show();
+      setDeleteBusy(true);
 
       const payload = {
         eventName: deleteEventId
@@ -1022,23 +1130,172 @@
         if (data.success) {
           appendLog('Evento cancellato con successo: ' + JSON.stringify(data, null, 2));
           $('#deleteConfirm').css('display','none');
-          $('#deleteLoading').hide();
+          setDeleteBusy(false);
           loadEvents();
         } else {
           appendLog('Errore durante la cancellazione dell\'evento: ' + JSON.stringify(data, null, 2));
           alert('Errore durante la cancellazione dell\'evento: ' + data.error);
           $('#deleteConfirm').css('display','none');
-          $('#deleteLoading').hide();
+          setDeleteBusy(false);
         }
       })
       .catch(err => {
         appendLog("Errore durante l'invio: " + err.message, true);
         alert('Errore durante l\'invio verso RotorHazard: ' + err.message);
         $('#deleteConfirm').css('display','none');
-        $('#deleteLoading').hide();
+        setDeleteBusy(false);
       });
     });
 
+    // Riassegna classi
+    function openReassignModal(eventName, freeId, qualId, finalId, smallId) {
+      reassignEventName = eventName;
+      reassignHasSmallFinal = !!smallId;
+      reassignBusy = false;
+
+      reassignEventNameEl.textContent = 'Evento: ' + eventName;
+      reassignErrorEl.textContent = '';
+      reassignErrorEl.classList.add('hidden');
+      reassignLoadingEl.classList.add('hidden');
+
+      $('#reassignApply, #reassignCancel').removeClass('disabled-state').prop('disabled', false);
+
+      populateClassSelect($(reassignFreeEl), freeId);
+      populateClassSelect($(reassignQualEl), qualId);
+      populateClassSelect($(reassignFinalEl), finalId);
+
+      if (reassignHasSmallFinal) {
+        reassignSmallRow.style.display = 'flex';
+        populateClassSelect($(reassignSmallEl), smallId);
+      } else {
+        reassignSmallRow.style.display = 'none';
+      }
+
+      $('#reassignOverlay').removeClass('hidden').css('display','flex');
+    }
+
+    function closeReassignModal() {
+      if (reassignBusy) return;
+      $('#reassignOverlay').css('display','none').addClass('hidden');
+    }
+
+    function populateClassSelect($select, selectedId) {
+      $select.empty();
+      if (!classes || !Array.isArray(classes)) return;
+      classes.forEach(cls => {
+        const opt = $('<option>').val(cls.id).text(cls.name);
+        $select.append(opt);
+      });
+      if (selectedId != null) {
+        $select.val(String(selectedId));
+      }
+    }
+
+    function applyReassignClasses() {
+      if (reassignBusy) return;
+
+      const freeId = parseInt(reassignFreeEl.value, 10);
+      const qualId = parseInt(reassignQualEl.value, 10);
+      const finalId = parseInt(reassignFinalEl.value, 10);
+
+      const payload = {
+        eventName: reassignEventName,
+        free_practice: freeId,
+        qualifier: qualId,
+        final: finalId
+      };
+
+      if (reassignHasSmallFinal) {
+        const smallId = parseInt(reassignSmallEl.value, 10);
+        payload.small_final = smallId;
+      }
+
+      reassignErrorEl.textContent = '';
+      reassignErrorEl.classList.add('hidden');
+      reassignLoadingEl.classList.remove('hidden');
+      $('#reassignApply, #reassignCancel').addClass('disabled-state').prop('disabled', true);
+      reassignBusy = true;
+
+      appendLog('Invio richiesta riassegnazione classi...');
+      appendLog(JSON.stringify(payload, null, 2));
+
+      fetch('/orchestrator/reassign_classes', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      })
+      .then(async res => {
+        if (!res.ok) throw new Error('Server error: ' + res.status);
+        const data = await res.json();
+        if (data.success) {
+          appendLog('Classi riassegnate con successo: ' + JSON.stringify(data, null, 2));
+          $('#reassignOverlay').css('display','none').addClass('hidden');
+          reassignBusy = false;
+          reassignLoadingEl.classList.add('hidden');
+          loadEvents();
+        } else {
+          appendLog('Errore riassegnazione classi: ' + JSON.stringify(data, null, 2));
+          reassignErrorEl.textContent = 'Errore: ' + (data.error || 'vedi log server.');
+          reassignErrorEl.classList.remove('hidden');
+          reassignBusy = false;
+          reassignLoadingEl.classList.add('hidden');
+          $('#reassignApply, #reassignCancel').removeClass('disabled-state').prop('disabled', false);
+        }
+      })
+      .catch(err => {
+        appendLog('Errore riassegnazione classi: ' + err.message, true);
+        reassignErrorEl.textContent = 'Errore durante l\'invio verso RotorHazard: ' + err.message;
+        reassignErrorEl.classList.remove('hidden');
+        reassignBusy = false;
+        reassignLoadingEl.classList.add('hidden');
+        $('#reassignApply, #reassignCancel').removeClass('disabled-state').prop('disabled', false);
+      });
+    }
+
+    // Helpers stato busy
+    function setWizardBusy(busy) {
+      if (busy) {
+        wizardInfoEl.classList.remove('hidden');
+      } else {
+        wizardInfoEl.classList.add('hidden');
+      }
+
+      const ids = ['cancel1','next1','back2','cancel2','next2','back3','cancel3','confirm','resetDefaults'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.disabled = busy;
+          if (busy) {
+            el.classList.add('disabled-state');
+          } else {
+            el.classList.remove('disabled-state');
+          }
+        }
+      });
+    }
+
+    function setDeleteBusy(busy) {
+      const delYes = document.getElementById('delYes');
+      const delNo = document.getElementById('delNo');
+
+      if (busy) {
+        document.getElementById('deleteLoading').classList.remove('hidden');
+      } else {
+        document.getElementById('deleteLoading').classList.add('hidden');
+      }
+
+      [delYes, delNo].forEach(el => {
+        if (!el) return;
+        el.disabled = busy;
+        if (busy) {
+          el.classList.add('disabled-state');
+        } else {
+          el.classList.remove('disabled-state');
+        }
+      });
+    }
+
+    // logging & error helpers
     function appendLog(msg, isError=false) {
       const t = new Date().toLocaleString();
       logEl.textContent = `${t} - ${msg}\n\n` + logEl.textContent;
@@ -1052,14 +1309,6 @@
     function clearWizardError() {
       wizardErrorEl.textContent = '';
       wizardErrorEl.classList.add('hidden');
-    }
-
-    function showWizardInfo() {
-      wizardInfoEl.classList.remove('hidden');
-    }
-
-    function clearWizardInfo() {
-      wizardInfoEl.classList.add('hidden');
     }
 
     function escapeHtml(s) {

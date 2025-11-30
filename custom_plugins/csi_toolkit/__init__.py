@@ -357,6 +357,31 @@ def initialize(rhapi):
             "data": result
         })
 
+    def get_event(eventName):
+        event = {
+            "name": eventName,
+            "classes": dict(),
+            "bracket_type": 'none'
+        }
+        for raceclass in rhapi.db.raceclasses:
+            event_name = rhapi.db.raceclass_attribute_value(raceclass, "orchestrator_event_name")
+            class_type = rhapi.db.raceclass_attribute_value(raceclass, "orchestrator_class_type")
+            if event_name == eventName:
+                event["classes"][class_type] = {
+                    "id": raceclass.id,
+                    "name": raceclass.name
+                }
+                # ricava il tipo di finale
+                if class_type == ClassType.FINAL:
+                    number_of_final_heats = len(rhapi.db.heats_by_class(raceclass.id))
+                    if number_of_final_heats == 14:
+                        event["bracket_type"] = 'multigp16'
+                    elif number_of_final_heats == 6:
+                        event["bracket_type"] = 'ddr8de'
+                    else:
+                        event["bracket_type"] = 'none'
+        return event
+
     @bp.route("/orchestrator/delete_event", methods=["POST"])
     def delete_event():
         eventName = request.json.get("eventName")
@@ -367,15 +392,73 @@ def initialize(rhapi):
                 "error": "invalid eventName"
             })
 
-        classes_to_remove = dict()
-        for raceclass in rhapi.db.raceclasses:
-            event_name = rhapi.db.raceclass_attribute_value(raceclass, "orchestrator_event_name")
-            class_type = rhapi.db.raceclass_attribute_value(raceclass, "orchestrator_class_type")
-            if event_name == eventName:
-                heats = rhapi.db.heats_by_class(raceclass.id)
-                for heat in heats:
-                    rhapi.db.heat_delete(heat)
-                rhapi.db.raceclass_delete(raceclass.id)
+        event = get_event(eventName)
+        for class_type in event["classes"]:
+            raceclass_id = event["classes"][class_type]["id"]
+            heats = rhapi.db.heats_by_class(raceclass_id)
+            for heat in heats:
+                rhapi.db.heat_delete(heat)
+            # the class is not deleted if there are saved races, so remove the class by changing the event name attribute
+            rhapi.db.raceclass_alter(raceclass_id, attributes = {
+                "orchestrator_event_name": ''
+            })
+            rhapi.db.raceclass_delete(raceclass_id)
+
+        rhapi.ui.broadcast_raceclasses()
+        rhapi.ui.broadcast_heats()
+
+        return jsonify({
+            "success": True,
+            "data": dict()
+        })
+
+    @bp.route("/orchestrator/reassign_classes", methods=["POST"])
+    def reassign_classes():
+        eventName = request.json.get("eventName")
+
+        # validazione: eventName deve esistere
+        if not eventName:
+            return jsonify({
+                "success": False,
+                "error": "invalid eventName"
+            })
+
+        # validazione: le classi di output devono essere tutte diverse
+        outputs = set()
+        for category in [ClassType.FREE_PRACTICE, ClassType.QUALIFIER, ClassType.FINAL, ClassType.SMALL_FINAL]:
+            new_class_id = request.json.get(category)
+            if new_class_id and new_class_id in outputs:
+                return jsonify({
+                    "success": False,
+                    "error": "Non puoi usare la stessa classe per più fasi di gara."
+                })
+            outputs.add(new_class_id)
+
+        # validazione: le classi di output non devono appartenere ad altri eventi
+        event = get_event(eventName)
+        #for category in [ClassType.FREE_PRACTICE, ClassType.QUALIFIER, ClassType.FINAL, ClassType.SMALL_FINAL]:
+        #    new_class_id = request.json.get(category)
+        #    if new_class_id:
+        #        new_event_name = rhapi.db.raceclass_attribute_value(new_class_id, "orchestrator_event_name")
+        #        if new_event_name and new_event_name != eventName:
+        #            return jsonify({
+        #                "success": False,
+        #                "error": "Non puoi usare una classe di un altro evento come classe di destinazione."
+        #            })
+
+        # esecuzione
+        for class_type in event["classes"]:
+            old_class_id = event["classes"][class_type]["id"]
+            new_class_id = request.json.get(class_type)
+            if new_class_id and new_class_id != old_class_id:
+                rhapi.db.raceclass_alter(old_class_id, attributes = {
+                    "orchestrator_event_name": '',
+                    "orchestrator_class_type": ''
+                })
+                rhapi.db.raceclass_alter(new_class_id, attributes = {
+                    "orchestrator_event_name": eventName,
+                    "orchestrator_class_type": class_type
+                })
 
         rhapi.ui.broadcast_raceclasses()
         rhapi.ui.broadcast_heats()
@@ -397,18 +480,17 @@ def initialize(rhapi):
 
         # identifica classi dell'evento per configurare l'esportatore
         rhapi.db.option_set('csi_small_final', '0')
-        for raceclass in rhapi.db.raceclasses:
-            event_name = rhapi.db.raceclass_attribute_value(raceclass, "orchestrator_event_name")
-            class_type = rhapi.db.raceclass_attribute_value(raceclass, "orchestrator_class_type")
-            if event_name == eventName:
-                if class_type == ClassType.QUALIFIER:
-                    rhapi.db.option_set('qualifier_class', raceclass.id)
-                elif class_type == ClassType.FINAL:
-                    rhapi.db.option_set('final_class', raceclass.id)
-                elif class_type == ClassType.SMALL_FINAL:
-                    # TODO: gestire il caso in cui il race director non vuole fare le finaline
-                    rhapi.db.option_set('small_final_class', raceclass.id)
-                    rhapi.db.option_set('csi_small_final', '1')
+        event = get_event(eventName)
+        for class_type in event["classes"]:
+            raceclass_id = event["classes"][class_type]["id"]
+            if class_type == ClassType.QUALIFIER:
+                rhapi.db.option_set('qualifier_class', raceclass_id)
+            elif class_type == ClassType.FINAL:
+                rhapi.db.option_set('final_class', raceclass_id)
+            elif class_type == ClassType.SMALL_FINAL:
+                # TODO: gestire il caso in cui il race director non vuole fare le finaline
+                rhapi.db.option_set('small_final_class', raceclass_id)
+                rhapi.db.option_set('csi_small_final', '1')
                     
         # lancia l'esportatore
         result = rhapi.io.run_export("CSV_CSI_Upload")
