@@ -41,6 +41,7 @@ class ClassType:
     QUALIFIER = "qualifier"
     FINAL = "final"
     SMALL_FINAL = "small_final"
+    SMALL_FINAL_HIDDEN = "small_final_hidden"
 
 
 
@@ -259,8 +260,6 @@ def initialize(rhapi):
         ### FINALINE ###
 
         if num_pilots > finalType:
-            # TODO: gestire il caso di finaline effettivamente inserite (il race manager potrebbe non volerle fare)
-
             # creazione classe finaline tramite generatore (funziona sia con multigp16 che ddr8de)
             small_final_class = rhapi.heatgen.generate(Generator.BUMP_UP, {
                 "input_class": qualifier_class,
@@ -291,7 +290,6 @@ def initialize(rhapi):
             heats = rhapi.db.heats_by_class(final_class)
             for heat in heats:
                 slots = rhapi.db.slots_by_heat(heat.id)
-                slot = slots[node_index]
                 for slot in slots:
                     # vincitore finaline
                     if slot.seed_rank == already_qualified+1:
@@ -376,10 +374,13 @@ def initialize(rhapi):
                     number_of_final_heats = len(rhapi.db.heats_by_class(raceclass.id))
                     if number_of_final_heats == 14:
                         event["bracket_type"] = 'multigp16'
+                        event["qualified_pilots"] = 16
                     elif number_of_final_heats == 6:
                         event["bracket_type"] = 'ddr8de'
+                        event["qualified_pilots"] = 8
                     else:
                         event["bracket_type"] = 'none'
+                        event["qualified_pilots"] = 0
         return event
 
     @bp.route("/orchestrator/delete_event", methods=["POST"])
@@ -425,7 +426,11 @@ def initialize(rhapi):
 
         # validazione: le classi di output devono essere tutte diverse
         outputs = set()
-        for category in [ClassType.FREE_PRACTICE, ClassType.QUALIFIER, ClassType.FINAL, ClassType.SMALL_FINAL]:
+        for category in [ClassType.FREE_PRACTICE,
+                         ClassType.QUALIFIER,
+                         ClassType.FINAL,
+                         ClassType.SMALL_FINAL,
+                         ClassType.SMALL_FINAL_HIDDEN]:
             new_class_id = request.json.get(category)
             if new_class_id and new_class_id in outputs:
                 return jsonify({
@@ -436,7 +441,11 @@ def initialize(rhapi):
 
         # validazione: le classi di output non devono appartenere ad altri eventi
         event = get_event(eventName)
-        #for category in [ClassType.FREE_PRACTICE, ClassType.QUALIFIER, ClassType.FINAL, ClassType.SMALL_FINAL]:
+        #for category in [ClassType.FREE_PRACTICE,
+        #                 ClassType.QUALIFIER,
+        #                 ClassType.FINAL,
+        #                 ClassType.SMALL_FINAL,
+        #                 ClassType.SMALL_FINAL_HIDDEN]:
         #    new_class_id = request.json.get(category)
         #    if new_class_id:
         #        new_event_name = rhapi.db.raceclass_attribute_value(new_class_id, "orchestrator_event_name")
@@ -468,6 +477,99 @@ def initialize(rhapi):
             "data": dict()
         })
 
+    @bp.route("/orchestrator/set_small_final_enabled", methods=["POST"])
+    def set_small_final_enabled():
+        eventName = request.json.get("eventName")
+        enabled = request.json.get("enabled")
+
+        if not eventName:
+            return jsonify({
+                "success": False,
+                "error": "invalid eventName"
+            })
+
+        if enabled is None:
+            return jsonify({
+                "success": False,
+                "error": "invalid value for enabled"
+            })
+
+        event = get_event(eventName)
+        final_raceclass_id = event["classes"][ClassType.FINAL]["id"]
+        final_raceclass_races = rhapi.db.races_by_raceclass(final_raceclass_id)
+        if len(final_raceclass_races) > 0:
+            return jsonify({
+                "success": False,
+                "error": "Non è possibile cambiare lo stato delle finaline quando le finali sono già iniziate."
+            })
+
+        qualifier_raceclass_id = event["classes"][ClassType.QUALIFIER]["id"]
+        qualified_pilots = event["qualified_pilots"]
+        if not enabled and event["classes"].get(ClassType.SMALL_FINAL):
+            # voglio disabilitare la small final
+            small_final_raceclass_id = event["classes"].get(ClassType.SMALL_FINAL)["id"]
+            rhapi.db.raceclass_alter(small_final_raceclass_id, attributes = {
+                "orchestrator_class_type": ClassType.SMALL_FINAL_HIDDEN
+            })
+            # rimozione dei vincitori delle finaline dalle finali
+            heats = rhapi.db.heats_by_class(final_raceclass_id)
+            for heat in heats:
+                slots = rhapi.db.slots_by_heat(heat.id)
+                for slot in slots:
+                    # vincitore finaline
+                    if slot.seed_id == small_final_raceclass_id and slot.seed_rank == 1:
+                        rhapi.db.slot_alter(slot.id,
+                            method = ProgramMethod.CLASS_RESULT,
+                            seed_raceclass_id = qualifier_raceclass_id,
+                            seed_rank = qualified_pilots-1
+                        )
+                    # secondo classificato finaline
+                    if slot.seed_id == small_final_raceclass_id and slot.seed_rank == 2:
+                        rhapi.db.slot_alter(slot.id,
+                            method = ProgramMethod.CLASS_RESULT,
+                            seed_raceclass_id = qualifier_raceclass_id,
+                            seed_rank = qualified_pilots
+                        )
+        elif enabled and event["classes"].get(ClassType.SMALL_FINAL_HIDDEN):
+            # voglio abilitare la small final
+            small_final_raceclass_id = event["classes"].get(ClassType.SMALL_FINAL_HIDDEN)["id"]
+            rhapi.db.raceclass_alter(small_final_raceclass_id, attributes = {
+                "orchestrator_class_type": ClassType.SMALL_FINAL
+            })
+            # inserimento dei vincitori delle finaline nelle finali
+            heats = rhapi.db.heats_by_class(final_raceclass_id)
+            for heat in heats:
+                slots = rhapi.db.slots_by_heat(heat.id)
+                for slot in slots:
+                    # vincitore finaline
+                    if slot.seed_id == qualifier_raceclass_id and slot.seed_rank == qualified_pilots-1:
+                        rhapi.db.slot_alter(slot.id,
+                            method = ProgramMethod.CLASS_RESULT,
+                            seed_raceclass_id = small_final_raceclass_id,
+                            seed_rank = 1
+                        )
+                    # secondo classificato finaline
+                    if slot.seed_id == qualifier_raceclass_id and slot.seed_rank == qualified_pilots:
+                        rhapi.db.slot_alter(slot.id,
+                            method = ProgramMethod.CLASS_RESULT,
+                            seed_raceclass_id = small_final_raceclass_id,
+                            seed_rank = 2
+                        )
+        else:
+            # parametri sbagliati
+            return jsonify({
+                "success": False,
+                "error": "inconsistent value for enabled"
+            })
+
+        rhapi.ui.broadcast_raceclasses()
+        rhapi.ui.broadcast_heats()
+
+        return jsonify({
+            "success": True,
+            "data": dict()
+        })
+
     @bp.route("/orchestrator/export_results", methods=["POST"])
     def export_results():
         eventName = request.json.get("eventName")
@@ -488,7 +590,6 @@ def initialize(rhapi):
             elif class_type == ClassType.FINAL:
                 rhapi.db.option_set('final_class', raceclass_id)
             elif class_type == ClassType.SMALL_FINAL:
-                # TODO: gestire il caso in cui il race director non vuole fare le finaline
                 rhapi.db.option_set('small_final_class', raceclass_id)
                 rhapi.db.option_set('csi_small_final', '1')
                     

@@ -155,23 +155,30 @@
       font-weight: 500;
     }
 
+    .finalines-btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      margin-top: 4px;
+    }
+
+    .finalines-btn.enable {
+      background: #16a34a;
+      color: #0f172a;
+    }
+
+    .finalines-btn.disable {
+      background: #f97316;
+      color: #0f172a;
+    }
+
     .reassign-btn {
       margin-top: 8px;
       font-size: 12px;
       padding: 5px 10px;
-    }
-
-    .finalines-toggle-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: #e2e8f0;
-      margin-top: 4px;
-    }
-
-    .finalines-toggle-row input {
-      width: auto;
     }
 
     button.primary {
@@ -225,6 +232,12 @@
       width: 640px;
       max-width: 94%;
       box-shadow: 0 10px 40px rgba(2,6,23,.6);
+    }
+
+    /* Modali di avvertimento (delete, reassign, finaline) */
+    .warning-modal {
+      border: 2px solid #eab308 !important;  /* giallo */
+      box-shadow: 0 0 20px rgba(234,179,8,0.5) !important;
     }
 
     .row {
@@ -330,6 +343,12 @@
     }
 
     .status-bar .status-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-bar .status-right {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -523,7 +542,7 @@
 
   <!-- Delete Modal -->
   <div id="deleteConfirm" class="overlay hidden">
-    <div class="modal" style="max-width:400px;">
+    <div class="modal warning-modal" style="max-width:400px;">
       <h3>Confermi di voler cancellare l'evento?</h3>
       <p class="small">Questa operazione è irreversibile. Eventuali gare svolte NON saranno cancellate.</p>
       <div style="text-align:right;margin-top:12px;">
@@ -531,12 +550,13 @@
         <button id="delYes" class="primary" style="background:#d9534f;color:white;">Cancella</button>
       </div>
       <div id="deleteLoading" class="wizard-info small hidden">Elaborazione...</div>
+      <div id="deleteError" class="wizard-error hidden"></div>
     </div>
   </div>
 
   <!-- Reassign Classes Modal -->
   <div id="reassignOverlay" class="overlay hidden">
-    <div class="modal" style="max-width:520px;">
+    <div class="modal warning-modal" style="max-width:520px;">
       <h3>Riassegna classi evento</h3>
       <p class="small">
         ⚠ Questa funzione serve solo per correggere configurazioni errate di RotorHazard.
@@ -571,13 +591,30 @@
         </div>
       </div>
 
+      <div id="reassignError" class="wizard-error hidden"></div>
+      <div id="reassignLoading" class="wizard-info small hidden">Elaborazione...</div>
+
       <div class="footer">
         <button id="reassignCancel" class="ghost">Annulla</button>
         <button id="reassignApply" class="primary">Applica</button>
       </div>
+    </div>
+  </div>
 
-      <div id="reassignError" class="wizard-error hidden"></div>
-      <div id="reassignLoading" class="wizard-info small hidden">Elaborazione...</div>
+  <!-- Finaline enable/disable Modal -->
+  <div id="finalineOverlay" class="overlay hidden">
+    <div class="modal warning-modal" style="max-width:420px;">
+      <h3 id="finalineTitle">Modifica finaline</h3>
+      <p id="finalineText" class="small">
+        Sei sicuro di voler disabilitare le finaline?
+        Questa operazione si può compiere finché le finali non sono iniziate.
+      </p>
+      <div id="finalineError" class="wizard-error hidden"></div>
+      <div id="finalineLoading" class="wizard-info small hidden">Elaborazione...</div>
+      <div class="footer">
+        <button id="finalineCancel" class="ghost">Annulla</button>
+        <button id="finalineConfirm" class="primary">Conferma</button>
+      </div>
     </div>
   </div>
 
@@ -614,6 +651,7 @@
     const logEl = document.getElementById('log');
     const deleteConfirm = document.getElementById('deleteConfirm');
     const reassignOverlay = document.getElementById('reassignOverlay');
+    const finalineOverlay = document.getElementById('finalineOverlay');
 
     // wizard steps
     const step1 = document.getElementById('step1');
@@ -645,6 +683,16 @@
     let reassignEventName = null;
     let reassignHasSmallFinal = false;
     let reassignBusy = false;
+
+    // finaline popup elements
+    const finalineTitleEl = document.getElementById('finalineTitle');
+    const finalineTextEl = document.getElementById('finalineText');
+    const finalineErrorEl = document.getElementById('finalineError');
+    const finalineLoadingEl = document.getElementById('finalineLoading');
+
+    let finalineEventName = null;
+    let finalineTargetEnabled = null;
+    let finalineBusy = false;
 
     $(document).ready(function () {
       socket.on('language', function (msg) {
@@ -704,6 +752,11 @@
       $('#reassignCancel').click(() => closeReassignModal());
       reassignOverlay.addEventListener('click', (e)=>{ if (e.target === reassignOverlay) closeReassignModal(); });
       $('#reassignApply').click(() => applyReassignClasses());
+
+      // Finaline modal buttons + Chiudi cliccando fuori
+      $('#finalineCancel').click(() => closeFinalineModal());
+      finalineOverlay.addEventListener('click', (e)=>{ if (e.target === finalineOverlay) closeFinalineModal(); });
+      $('#finalineConfirm').click(() => confirmFinalineToggle());
     });
 
     // Rendering eventi esistenti
@@ -722,10 +775,11 @@
       /*events = [{
           name: "Test",
           classes: {
-              free_practice: { id: [int], name: [string] },
-              qualifier:     { id: [int], name: [string] },
-              final:         { id: [int], name: [string] },
-              small_final:   { id: [int], name: [string] }
+              free_practice:      { id: [int], name: [string] },
+              qualifier:          { id: [int], name: [string] },
+              final:              { id: [int], name: [string] },
+              small_final:        { id: [int], name: [string] },
+              small_final_hidden: { id: [int], name: [string] }
           },
           bracket_type: "multigp16" | "ddr8de"
       }];*/
@@ -737,6 +791,7 @@
       events.data.forEach(ev => {
         const isValid = !!ev.classes.free_practice && !!ev.classes.qualifier && !!ev.classes.final;
         const hasSmallFinal = !!ev.classes.small_final;
+        const hasSmallFinalHidden = !!ev.classes.small_final_hidden;
 
         if (isValid) {
           const classesHtml = `
@@ -782,16 +837,23 @@
               </div>` : ''}
             </div>`;
 
+          let finalineButtonHtml = '';
+          if (hasSmallFinal || hasSmallFinalHidden) {
+            const enabled = hasSmallFinal; // se esiste small_final → attive
+            const label = enabled ? 'Disabilita finaline' : 'Abilita finaline';
+            const mode = enabled ? 'disable' : 'enable';
+            finalineButtonHtml = `
+              <button class="finalines-btn ${mode}" data-mode="${mode}" data-event-name="${ev.name}">
+                ${label}
+              </button>`;
+          }
+
           const actionsHtml = `
             <div class="event-section event-actions">
               <h4>Azioni</h4>
               <button class="export-btn">Esporta risultati</button>
               <button class="delete-btn">Cancella evento</button>
-              <div class="finalines-toggle-row">
-                ${hasSmallFinal ? `
-                <input type="checkbox" class="finalines-toggle" checked>
-                <label>Abilita finaline</label>` : ''}
-              </div>
+              ${finalineButtonHtml}
             </div>`;
 
           const html = `
@@ -854,28 +916,6 @@
         showDeleteConfirm(id);
       });
 
-      // bind finalines toggle (solo UI + log, backend lo gestirai tu)
-      $('.finalines-toggle').off('change').on('change', function() {
-        const card = $(this).closest('.event-card');
-        const id = card.data('eventid');
-        const enabled = $(this).is(':checked');
-
-        const payload = {
-          eventName: id,
-          enabled: enabled
-        };
-
-        appendLog('Cambio stato finaline...');
-        appendLog(JSON.stringify(payload, null, 2));
-
-        // esempio di chiamata, endpoint da definire lato server se vuoi usarlo
-        fetch('/orchestrator/set_small_final_enabled', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(payload)
-        }).catch(()=>{ /* opzionale, puoi gestire errori in futuro */ });
-      });
-
       // bind reassign buttons
       $('.reassign-btn').off('click').on('click', function() {
         const section = $(this).closest('.event-section').find('.class-block');
@@ -886,6 +926,14 @@
         const smallId = section.data('small-id'); // può essere undefined
 
         openReassignModal(eventName, freeId, qualId, finalId, smallId);
+      });
+
+      // bind finaline buttons
+      $('.finalines-btn').off('click').on('click', function() {
+        const eventName = $(this).data('event-name');
+        const mode = $(this).data('mode'); // "enable" o "disable"
+        const enable = (mode === 'enable');
+        openFinalineModal(eventName, enable);
       });
     }
 
@@ -1104,7 +1152,7 @@
 
     function showDeleteConfirm(id) {
       deleteEventId = id;
-      $('#deleteLoading').addClass('hidden');
+      document.getElementById('deleteError').classList.add('hidden');
       setDeleteBusy(false);
       $('#deleteConfirm').removeClass('hidden').css('display','flex');
     }
@@ -1134,15 +1182,17 @@
           loadEvents();
         } else {
           appendLog('Errore durante la cancellazione dell\'evento: ' + JSON.stringify(data, null, 2));
-          alert('Errore durante la cancellazione dell\'evento: ' + data.error);
-          $('#deleteConfirm').css('display','none');
+          const delError = document.getElementById('deleteError');
+          delError.textContent = 'Errore durante la cancellazione: ' + (data.error || 'vedi log server.');
+          delError.classList.remove('hidden');
           setDeleteBusy(false);
         }
       })
       .catch(err => {
         appendLog("Errore durante l'invio: " + err.message, true);
-        alert('Errore durante l\'invio verso RotorHazard: ' + err.message);
-        $('#deleteConfirm').css('display','none');
+        const delError = document.getElementById('deleteError');
+        delError.textContent = 'Errore durante l\'invio verso RotorHazard: ' + err.message;
+        delError.classList.remove('hidden');
         setDeleteBusy(false);
       });
     });
@@ -1249,6 +1299,84 @@
         reassignBusy = false;
         reassignLoadingEl.classList.add('hidden');
         $('#reassignApply, #reassignCancel').removeClass('disabled-state').prop('disabled', false);
+      });
+    }
+
+    // Finaline toggle
+    function openFinalineModal(eventName, enable) {
+      finalineEventName = eventName;
+      finalineTargetEnabled = enable;
+      finalineBusy = false;
+
+      finalineErrorEl.textContent = '';
+      finalineErrorEl.classList.add('hidden');
+      finalineLoadingEl.classList.add('hidden');
+
+      $('#finalineConfirm, #finalineCancel').removeClass('disabled-state').prop('disabled', false);
+
+      if (enable) {
+        finalineTitleEl.textContent = 'Abilita finaline';
+        finalineTextEl.textContent = 'Sei sicuro di voler abilitare le finaline? Questa operazione si può compiere finché le finali non sono iniziate.';
+      } else {
+        finalineTitleEl.textContent = 'Disabilita finaline';
+        finalineTextEl.textContent = 'Sei sicuro di voler disabilitare le finaline? Questa operazione si può compiere finché le finali non sono iniziate.';
+      }
+
+      $('#finalineOverlay').removeClass('hidden').css('display','flex');
+    }
+
+    function closeFinalineModal() {
+      if (finalineBusy) return;
+      $('#finalineOverlay').css('display','none').addClass('hidden');
+    }
+
+    function confirmFinalineToggle() {
+      if (finalineBusy) return;
+
+      finalineErrorEl.textContent = '';
+      finalineErrorEl.classList.add('hidden');
+      finalineLoadingEl.classList.remove('hidden');
+      $('#finalineConfirm, #finalineCancel').addClass('disabled-state').prop('disabled', true);
+      finalineBusy = true;
+
+      const payload = {
+        eventName: finalineEventName,
+        enabled: finalineTargetEnabled
+      };
+
+      appendLog('Invio richiesta cambio stato finaline...');
+      appendLog(JSON.stringify(payload, null, 2));
+
+      fetch('/orchestrator/set_small_final_enabled', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      })
+      .then(async res => {
+        if (!res.ok) throw new Error('Server error: ' + res.status);
+        const data = await res.json();
+        if (data.success) {
+          appendLog('Stato finaline aggiornato con successo: ' + JSON.stringify(data, null, 2));
+          $('#finalineOverlay').css('display','none').addClass('hidden');
+          finalineBusy = false;
+          finalineLoadingEl.classList.add('hidden');
+          loadEvents();
+        } else {
+          appendLog('Errore aggiornamento finaline: ' + JSON.stringify(data, null, 2));
+          finalineErrorEl.textContent = 'Errore: ' + (data.error || 'vedi log server.');
+          finalineErrorEl.classList.remove('hidden');
+          finalineBusy = false;
+          finalineLoadingEl.classList.add('hidden');
+          $('#finalineConfirm, #finalineCancel').removeClass('disabled-state').prop('disabled', false);
+        }
+      })
+      .catch(err => {
+        appendLog('Errore aggiornamento finaline: ' + err.message, true);
+        finalineErrorEl.textContent = 'Errore durante l\'invio verso RotorHazard: ' + err.message;
+        finalineErrorEl.classList.remove('hidden');
+        finalineBusy = false;
+        finalineLoadingEl.classList.add('hidden');
+        $('#finalineConfirm, #finalineCancel').removeClass('disabled-state').prop('disabled', false);
       });
     }
 
