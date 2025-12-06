@@ -403,6 +403,44 @@
       pointer-events: none !important;
       filter: grayscale(0.3);
     }
+
+    .overlay-preview-card {
+      margin-top: 24px;
+      width: 100%;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+
+      background: #0f1724;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 6px 20px rgba(2,6,23,0.6);
+    }
+
+    .overlay-preview-card h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .overlay-preview-frame {
+      width: 100%;
+      height: 480px;
+      border: none;
+      border-radius: 10px;
+      background: #fff;
+      overflow: hidden;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+    }
+
+    /* Adattamento responsive */
+    @media (max-width: 800px) {
+      .overlay-preview-frame {
+        height: 360px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -420,6 +458,12 @@
     <hr style="margin:18px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)" />
     <h3>Eventi creati</h3>
     <div id="eventsContainer" class="events-list"></div>
+
+    <!-- Riquadro anteprima overlays -->
+    <h3>CSI Overlays</h3>
+    <div class="overlay-preview-card">
+      <iframe src="/ddr_overlays" class="overlay-preview-frame"></iframe>
+    </div>
   </div>
 
   <!-- Overlay / Modal (wizard) -->

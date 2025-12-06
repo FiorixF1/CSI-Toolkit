@@ -266,125 +266,231 @@
 <body>
 
     <style>
+        /* --- GLOBAL --- */
         body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 30px 20px;
+            margin: 0;
         }
 
-        .toggle-container {
-            border: 1px solid #ccc;
-            border-radius: 8px;
+        /* HEADER */
+        header {
+            text-align: center;
+            padding: 16px 0;
+            background: linear-gradient(135deg, #0a1c35, #0d284b);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 24px;
+        }
+        header img {
+            filter: drop-shadow(0 0 4px rgba(255,255,255,0.4));
+        }
+
+        /* TITLES */
+        h2, h3 {
+            color: #bfdbfe;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+        hr {
+            border: 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin: 24px auto;
             width: 90%;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
+        /* CONTAINER (toggle sections) */
+        .toggle-container {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            width: 90%;
+            margin: 0 auto;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+        }
+
+        /* HEADERS */
         .toggle-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: relative;
-            padding: 10px;
+            padding: 14px 20px;
+            background: linear-gradient(90deg, #0d284b, #133b66);
+            color: #e0f2fe;
             cursor: pointer;
-            background: #f5f5f5;
+            transition: background 0.25s;
         }
-
+        .toggle-header:hover {
+            background: linear-gradient(90deg, #103157, #164876);
+        }
         .toggle-header h2 {
             margin: 0;
-            font-size: 16px;
-            flex-grow: 1;
-            text-align: center;
+            font-size: 17px;
         }
-
         .arrow {
-            margin-left: auto;
-            cursor: pointer;
             transition: transform 0.3s;
-            display: inline-block;
         }
-
         .arrow.expanded {
             transform: rotate(90deg);
         }
 
+        /* CONTENT */
         .toggle-content {
             display: none;
-            padding: 10px;
+            padding: 20px;
+            background: rgba(10,25,47,0.65);
+            border-top: 1px solid rgba(255,255,255,0.04);
         }
 
-        .pilots-grid {
+        /* GRID STYLES */
+        .pilots-grid, .teams-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 18px;
         }
 
-        .pilot {
+        /* PILOT + TEAM CARDS */
+        .pilot, .team {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 10px;
-            background: #fafafa;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .pilot:hover, .team:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
         }
 
+        /* AVATARS / LOGOS */
         .pilot img {
-            width: 70px;
-            height: 96px;
+            width: 80px;
+            height: 110px;
             object-fit: cover;
-            border: 1px solid #aaa;
-            margin-bottom: 6px;
-        }
-
-        .pilot span {
-            font-size: 14px;
-            margin-bottom: 6px;
-            text-align: center;
-        }
-
-        .update-btn {
-            padding: 4px 8px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        .teams-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 15px;
-        }
-
-        .team {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border: 1px solid #ddd;
             border-radius: 6px;
-            padding: 10px;
-            background: #fafafa;
+            box-shadow: 0 0 8px rgba(0,0,0,0.45);
+            margin-bottom: 8px;
         }
-
         .team img {
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1px solid #aaa;
-            margin-bottom: 6px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.4);
+            margin-bottom: 8px;
         }
 
-        .team span {
-            font-size: 14px;
-            margin-bottom: 6px;
+        /* TEXT */
+        .pilot span, .team span {
+            color: #e2e8f0;
+            font-size: 15px;
+            margin-bottom: 8px;
             text-align: center;
         }
+
+        /* BUTTONS */
+        .update-btn, .upload-zip-btn {
+            background: #38bdf8;
+            border: none;
+            color: #06283d;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .update-btn:hover, .upload-zip-btn:hover {
+            background: #0ea5e9;
+        }
+
+        /* FORM SELECTOR BOX */
+        .form-container {
+            padding: 20px;
+            margin: 0 auto 30px auto;
+            max-width: 500px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 6px;
+            color: #bae6fd;
+            text-align: left;
+        }
+        .form-container select {
+            width: 100%;
+            padding: 10px;
+            background: #082f49;
+            border: 1px solid rgba(255,255,255,0.18);
+            color: #e0f2fe;
+            border-radius: 8px;
+        }
+
+        /* LINK TABLE */
+        table {
+            width: 90%;
+            margin: 0 auto 40px auto;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.03);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            color: #e2e8f0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        th {
+            background: rgba(148,163,184,0.15);
+            color: #dbeafe;
+            font-size: 14px;
+        }
+        tr:hover td {
+            background: rgba(255,255,255,0.03);
+        }
+
+        /* LINKS */
+        a {
+            color: #7dd3fc;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        a:hover {
+            color: #bae6fd;
+            text-decoration: underline;
+        }
+
+        /* NODE OVERLAY LINKS */
+        .text-center p a {
+            display: inline-block;
+            margin: 4px 0;
+        }
+
+        /* MOBILE ADAPTATION */
+        @media (max-width: 800px) {
+            .toggle-container {
+                width: 100%;
+            }
+            table {
+                width: 100%;
+            }
+        }
+
     </style>
 
     <header>
-        <img src="/csi_toolkit/ddr_overlays/static/imgs/ddr_logo_white.png" alt="DDR Logo" height="48px"> 
+        <img src="/csi_toolkit/orchestrator/static/imgs/csi_logo.jpg" alt="CSI Logo" height="96px"> 
     </header>
 
-    <h2 class="text-center">DDR Overlays Plugin</h2>
+    <h2 class="text-center">CSI Overlays Plugin</h2>
     <hr>
 
     <div class="text-center mb-5">
@@ -410,7 +516,7 @@
                     <input type="file" id="zipInput" accept=".zip" style="display: none;">
                     <button class="update-btn upload-zip-btn">Upload ZIP</button>
                 </div>
-
+                <br>
                 <div class="pilots-grid" id="pilotsGrid">
                     <!-- Dynamically generated pilots -->
                 </div>
@@ -479,34 +585,6 @@
             <br>
         </form>
         </div>
-
-    <style>
-        .form-container {
-            padding: 20px;
-            margin-left: 35%;
-            margin-right: 35%;
-            border: 2px solid black;
-        }
-        label, input {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        table {
-            width: 90%;
-            margin-left: auto;
-            margin-right: auto;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-    </style>
 
     <table>
         <thead>

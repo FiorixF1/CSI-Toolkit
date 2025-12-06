@@ -603,8 +603,8 @@ def initialize(rhapi):
 
     rhapi.ui.blueprint_add(bp)
 
-    rhapi.ui.register_panel("orchestrator", "CSI Toolkit Panel", "settings")
-    rhapi.ui.register_markdown("orchestrator", "CSI Toolkit Panel link", "Race administrator panel is available [here](/orchestrator)")
+    rhapi.ui.register_panel("orchestrator", "CSI Toolkit Panel", "format")
+    rhapi.ui.register_markdown("orchestrator", "CSI Toolkit Panel link", "Il pannello di gestione gara è raggiungibile [qui](/orchestrator)")
     
     rhapi.fields.register_raceclass_attribute(UIField('orchestrator_event_name', "Event Name", UIFieldType.TEXT, value="", private=True))
     rhapi.fields.register_raceclass_attribute(UIField('orchestrator_class_type', "Class Type", UIFieldType.TEXT, value="", private=True))

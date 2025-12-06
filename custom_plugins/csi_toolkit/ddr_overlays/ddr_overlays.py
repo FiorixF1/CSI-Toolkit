@@ -251,5 +251,5 @@ def initialize(rhapi):
 
     rhapi.ui.blueprint_add(bp)
 
-    rhapi.ui.register_panel("ddr_overlays", "DDR - OBS Overlays", "settings")
-    rhapi.ui.register_markdown("ddr_overlays", "DDR Overlays link", "Overlays are available [here](/ddr_overlays)")
+    rhapi.ui.register_panel("ddr_overlays", "CSI - OBS Overlays", "settings")
+    rhapi.ui.register_markdown("ddr_overlays", "CSI Overlays link", "Overlays are available [here](/ddr_overlays)")
