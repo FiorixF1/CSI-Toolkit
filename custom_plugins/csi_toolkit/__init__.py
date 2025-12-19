@@ -80,7 +80,7 @@ def initialize(rhapi):
         qualHeatSize = request.json["settings"].get("qualHeatSize", 4)
         finalType = request.json["settings"].get("finalType", 16)
         numAdvance = request.json["settings"].get("numAdvance", 2)
-        finalHeatSize = request.json["settings"].get("finalHeatSize", 4)
+        finalHeatSeeded = request.json["settings"].get("finalHeatSeeded", 2)
 
         if not eventName:
             return jsonify({
@@ -125,10 +125,10 @@ def initialize(rhapi):
                 "error": "invalid numAdvance"
             })
 
-        if finalHeatSize not in [2, 3, 4, 5, 6] or numAdvance >= finalHeatSize:
+        if finalHeatSeeded not in [1, 2, 3, 4] or numAdvance + finalHeatSeeded > 6:
             return jsonify({
                 "success": False,
-                "error": "invalid finalHeatSize"
+                "error": "invalid finalHeatSeeded"
             })
 
         ### PROVE LIBERE ###
@@ -183,7 +183,7 @@ def initialize(rhapi):
             "input_class": free_practice_class.id,
             "output_class": None,
             "qualifiers_per_heat": qualHeatSize, 
-            "num_pilots": num_pilots,
+            "total_pilots": num_pilots,
             "seed_offset": 1,
             "suffix": "Qualifier"
         })
@@ -218,7 +218,9 @@ def initialize(rhapi):
             # ddr8de
             final_class = rhapi.heatgen.generate(Generator.BRACKET_DOUBLE_ELIMINATION_8, {
                 "input_class": qualifier_class,
-                "output_class": None
+                "output_class": None,
+                "race1_qualifiers": "1,8,4,5",
+                "race2_qualifiers": "2,7,3,6"
             })
         else:
             pass
@@ -265,8 +267,8 @@ def initialize(rhapi):
                 "input_class": qualifier_class,
                 "output_class": None,
                 "advances_per_heat": numAdvance,
-                "qualifiers_per_heat": finalHeatSize,
-                "num_pilots": num_pilots - already_qualified,
+                "qualifiers_per_heat": finalHeatSeeded,
+                "total_pilots": num_pilots - already_qualified,
                 "seed_offset": already_qualified + 1,
                 "suffix": "Main"
             })

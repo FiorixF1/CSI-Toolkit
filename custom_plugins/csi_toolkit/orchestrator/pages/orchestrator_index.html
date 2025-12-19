@@ -543,8 +543,8 @@
                 <input id="numAdvance" type="number" min="1" max="4" value="2" />
               </div>
               <div style="flex:1">
-                <label class="small">Piloti per heat (finaline)</label>
-                <input id="finalHeatSize" type="number" min="2" max="6" value="4" />
+                <label class="small">Piloti iniziali per heat (finaline)</label>
+                <input id="finalHeatSeeded" type="number" min="1" max="4" value="2" />
               </div>
             </div>
             <div class="small" style="margin-top:8px">
@@ -709,7 +709,7 @@
     const finalTypeEl = document.getElementById('finalType');
     const finalinesOptionsEl = document.getElementById('finalinesOptions');
     const numAdvanceEl = document.getElementById('numAdvance');
-    const finalHeatSizeEl = document.getElementById('finalHeatSize');
+    const finalHeatSeededEl = document.getElementById('finalHeatSeeded');
     const summaryEl = document.getElementById('summary');
     const wizardErrorEl = document.getElementById('wizardError');
     const wizardInfoEl = document.getElementById('wizardInfo');
@@ -1081,10 +1081,10 @@
       clearWizardError();
 
       const numAdvance = parseInt(numAdvanceEl.value, 10);
-      const finalHeatSize = parseInt(finalHeatSizeEl.value, 10);
+      const finalHeatSeeded = parseInt(finalHeatSeededEl.value, 10);
       if (!finalinesOptionsEl.classList.contains('hidden')) {
-        if (numAdvance >= finalHeatSize) {
-          showWizardError('I piloti che avanzano nelle finaline devono essere inferiori ai piloti della heat.');
+        if (numAdvance + finalHeatSeeded > 6) {
+          showWizardError('Le heat delle finaline non possono avere più di 6 piloti.');
           return;
         }
       }
@@ -1115,7 +1115,7 @@
         qualHeatSize: parseInt(qualHeatSizeEl.value, 10),
         finalType: parseInt(finalTypeEl.value, 10),
         numAdvance: parseInt(numAdvanceEl.value, 10),
-        finalHeatSize: parseInt(finalHeatSizeEl.value, 10)
+        finalHeatSeeded: parseInt(finalHeatSeededEl.value, 10)
       };
       summaryEl.innerHTML = `
         <div class="small">Nome evento: <strong>${escapeHtml(data.eventName)}</strong></div>
@@ -1123,7 +1123,7 @@
         <div class="small">Prove libere: ${data.freeHeatSize} piloti per heat</div>
         <div class="small">Qualifiche: ${data.qualHeatSize} piloti per heat</div>
         <div class="small">Finale: Doppia eliminazione — ${data.finalType} piloti</div>
-        ${ (data.pilots.length > data.finalType) ? `<div class="small">Finaline: ${data.numAdvance} avanzano — heat da ${data.finalHeatSize}</div>` : '' }
+        ${ (data.pilots.length > data.finalType) ? `<div class="small">Finaline: ${data.numAdvance} avanzano — heat da ${data.numAdvance + data.finalHeatSeeded}</div>` : '' }
       `;
     }
 
@@ -1137,7 +1137,7 @@
         finalTypeEl.value = '16';
       }
       numAdvanceEl.value = '2';
-      finalHeatSizeEl.value = '4';
+      finalHeatSeededEl.value = '2';
       checkFinalinesVisibility(selected.length);
       clearWizardError();
     }
@@ -1159,7 +1159,7 @@
       // aggiungi finaline solo se visibili
       if (!finalinesOptionsEl.classList.contains('hidden')) {
         payload.settings.numAdvance = parseInt(numAdvanceEl.value, 10);
-        payload.settings.finalHeatSize = parseInt(finalHeatSizeEl.value, 10);
+        payload.settings.finalHeatSeeded = parseInt(finalHeatSeededEl.value, 10);
       }
 
       appendLog('Invio evento al server RotorHazard...');
