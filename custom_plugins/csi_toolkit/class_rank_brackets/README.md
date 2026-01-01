@@ -1,19 +1,19 @@
 # RotorHazard Class Rank Brackets
+
 "Brackets" class ranking plugin for RotorHazard
 
 This plugin has been designed to be used along with single and double elimination brackets.
 
 It supports:
+
 * MultiGP format with Chace the Ace and Iron Man rule (16 pilots, double elimination)
 * FAI brackets according to F9U rules (16/32/64 pilots, both single and double elimination)
 * CSI Drone Racing format (16 pilots, double elimination)
-* Unofficial 8 pilots double elimintion brackets by DDR, both MultiGP-like and FAI-like
-
+* Unofficial 8 pilots double elimination brackets by DDR, both MultiGP-like and FAI-like
 
 ## Installation
 
 Install through the "Community Plugins" area within RotorHazard. Alternately, copy the `class_rank_brackets` directory from inside `custom_plugins` into the plugins directory of your RotorHazard data directory.
-
 
 ## Usage
 
