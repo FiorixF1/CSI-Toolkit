@@ -124,7 +124,8 @@
 
                     $.each(display_laps, function (j, lap) { // j is loop num, lap is json object
                         var tr = '';
-                        var lapTime = lap.lap_time;
+                        var lapTimeFromRH = lap.lap_time_formatted || lap.lap_time; // for compatibility with RH 4.3
+                        var lapTime = lapTimeFromRH;
                         if (lap.splits.length > 0) {
                             lapTime += ' (';
                             for (k = 0; k < lap.splits.length; k++) {
@@ -156,13 +157,13 @@
                         tr.append(
                             $('<td class="display_lap_number">').text(lap.lap_number + ":")
                         );
-                        $time_td = $('<td>').text(lap.lap_time + ' ');
+                        $time_td = $('<td>').text(lapTimeFromRH + ' ');
                         $local_prepend = $('<span class="from_start">');
 
                         $time_td.prepend($local_prepend);
                         tr.append($time_td);
 
-                        if (j && lap.lap_raw < (rotorhazard.min_lap * 1000)) {
+                        if (j && (lap.lap_raw || lap.lap_time) < (rotorhazard.min_lap * 1000)) {
                             tr.addClass('min-lap-warning');
                         }
                         if (!rotorhazard.event.race_status.race_mode && lap.lap_time_stamp > (rotorhazard.event.race_status.race_time_sec * 1000)) {

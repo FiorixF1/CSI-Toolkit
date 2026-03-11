@@ -84,11 +84,6 @@
 
         socket.on('language', default_handler['language']);
 
-        // set up node local store
-        for (i = 0; i < {{ num_nodes }}; i++) {
-            rotorhazard.nodes[i] = new nodeModel();
-        }
-
         socket.on('race_scheduled', default_handler['race_scheduled']);
 
         socket.on('pilot_data', function (msg) {

@@ -187,7 +187,7 @@ body {
                     var pilot_id = pilot.pilot_id;
                     var pilot_callsign = pilot.callsign;
                     var pilot_position = +i+1; // pilot.position is null until a pilot has completed at least one lap
-                    var pilot_team_url = getTeamImgURL(pilot);
+                    var pilot_team_url = getTeamImgURL(pilot.team_name);
 
                     var pilot_gap_ms = pilot.time_behind_raw ? Math.round(pilot.time_behind_raw) : 0;
                     var gap_minutes = Math.floor(pilot_gap_ms / 60000);

@@ -396,17 +396,17 @@
                                     $("#img-1").attr("src", getPilotImgURL(first_pilot));
                                     $("#name-1").html(first_pilot.callsign);
                                     $("#team-1").html(first_pilot.team_name || "-");
-                                    $("#logo-1").attr("src", getTeamImgURL(first_pilot));
+                                    $("#logo-1").attr("src", getTeamImgURL(first_pilot.team_name));
                                     
                                     $("#img-2").attr("src", getPilotImgURL(second_pilot));
                                     $("#name-2").html(second_pilot.callsign);
                                     $("#team-2").html(second_pilot.team_name || "-");
-                                    $("#logo-2").attr("src", getTeamImgURL(second_pilot));
+                                    $("#logo-2").attr("src", getTeamImgURL(second_pilot.team_name));
                                     
                                     $("#img-3").attr("src", getPilotImgURL(third_pilot));
                                     $("#name-3").html(third_pilot.callsign);
                                     $("#team-3").html(third_pilot.team_name || "-");
-                                    $("#logo-3").attr("src", getTeamImgURL(third_pilot));
+                                    $("#logo-3").attr("src", getTeamImgURL(third_pilot.team_name));
                                     
                                     $("#ranking-container").empty();
                                     for (var i in leaderboard.slice(3)) {
@@ -415,7 +415,7 @@
                                         var position = leaderboard[index].position;
                                         var pilotImg = getPilotImgURL(current_pilot);
                                         var pilot_name = current_pilot.callsign;
-                                        var teamImg = getTeamImgURL(current_pilot);
+                                        var teamImg = getTeamImgURL(current_pilot.team_name);
                                         var html = '<li><span class="position">' + position + '</span><img class="avatar" src="' + pilotImg + '"><span class="name">' + pilot_name + '</span><img class="team-logo" src="' + teamImg + '"></li>';
                                         $("#ranking-container").append(html);
                                     }
