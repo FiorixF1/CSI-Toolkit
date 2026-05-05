@@ -125,6 +125,11 @@ td.flag img {
     object-fit: contain;
 }
 
+td.channel {
+    font-size: 2rem;
+    line-height: 1;
+}
+
 .screen-reader-text {
     clip: rect(1px, 1px, 1px, 1px);
     position: absolute;

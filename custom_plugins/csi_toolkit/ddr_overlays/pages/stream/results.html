@@ -107,6 +107,23 @@ table.leaderboard td.pilot {
     text-align: left;
 }
 
+table.leaderboard td.channel {
+    width: 4.5em;
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #ffffff;
+}
+
+/* Frequency colors */
+table.leaderboard td.channel.channel-r1 { color: #3d8bff; }
+table.leaderboard td.channel.channel-f2 { color: #ff3030; }
+table.leaderboard td.channel.channel-f4 { color: #46d65f; }
+table.leaderboard td.channel.channel-r7 { color: #b45cff; }
+table.leaderboard td.channel.channel-r8 { color: #32dfff; }
+
 td.avatar {
     width: 50px;
     height: 50px;
@@ -146,11 +163,13 @@ td.flag img {
         'pilot_data',
         'leaderboard',
         'race_status',
+        'frequency_data',
     ];
 
     rotorhazard.show_messages = false;
 
     var ddr_pilot_data;
+    var ddr_frequency_data;
 
     function race_kickoff(msg) {
         rotorhazard.timer.stopAll();
@@ -181,7 +200,7 @@ td.flag img {
         socket.on('race_status', default_handler['race_status']);
 
         socket.on('heartbeat', default_handler['heartbeat']);
-        
+
         var current_laps = {};
         socket.on('current_laps', function (msg) {
             if (msg && 'last_race' in msg) {
@@ -198,6 +217,10 @@ td.flag img {
             ddr_pilot_data = msg.pilots;    
         });
 
+        socket.on('frequency_data', function (msg) {
+            ddr_frequency_data = msg.fdata;
+        });
+
         socket.on('leaderboard', function (msg) {
             if (msg && 'last_race' in msg) {
                 race = msg.last_race;
@@ -209,7 +232,7 @@ td.flag img {
             
             leaderboard_type = race.leaderboard.meta.primary_leaderboard;
             $('#leaderboard').empty();
-            $('#leaderboard').append(build_results(race.leaderboard[leaderboard_type], 'current', race.leaderboard.meta, ddr_pilot_data.length, ddr_pilot_data));
+            $('#leaderboard').append(build_results(race.leaderboard[leaderboard_type], 'current', race.leaderboard.meta, ddr_pilot_data.length, ddr_pilot_data, ddr_frequency_data));
 
             var this_leaderboard = race.leaderboard[leaderboard_type];
             var pilot_to_laps = {};

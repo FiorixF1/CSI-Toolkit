@@ -423,7 +423,7 @@ function build_leaderboard(leaderboard, display_type, meta, number_of_pilots=999
     return twrap;
 }
 
-function build_results(leaderboard, display_type='by_race_time', meta={}, number_of_pilots=999, ddr_pilot_data=[], display_starts=false) {
+function build_results(leaderboard, display_type='by_race_time', meta={}, number_of_pilots=999, ddr_pilot_data=[], ddr_frequency_data=[], display_starts=false) {
     meta.team_racing_mode ??= false;
     meta.start_behavior ??= 0;
     meta.consecutives_count ??= 0;
@@ -442,6 +442,7 @@ function build_results(leaderboard, display_type='by_race_time', meta={}, number
     header_row.append(th('avatar', '<span class="screen-reader-text">Avatar</span>'));
     header_row.append(th('flags', '<span class="screen-reader-text">Flag</span>'));
     header_row.append(th('pilot', __('Pilot')));
+    header_row.append(th('channel', '<span class="screen-reader-text">Channel</span>'));
     header_row.append(th('team', __('Team')));
 
     if (display_starts) header_row.append(th('starts', __('Starts')));
@@ -485,6 +486,17 @@ function build_results(leaderboard, display_type='by_race_time', meta={}, number
         row.append(`<td class="flag"><img class="country_flag" src="${flagUrl}"></td>`);
 
         row.append(`<td class="pilot">${pilot.callsign}</td>`);
+
+        let channel_label;
+        if (ddr_frequency_data && typeof pilot.node !== 'undefined') {
+            let node_index = pilot.node;
+            if (ddr_frequency_data[node_index] && ddr_frequency_data[node_index].band && ddr_frequency_data[node_index].channel) {
+                channel_label = ddr_frequency_data[node_index].band + ddr_frequency_data[node_index].channel;
+            }
+        }
+        const channel_class = channel_label ? ` channel-${channel_label.toLowerCase()}` : '';
+        row.append(`<td class="channel${channel_class}">${channel_label || ''}</td>`);
+
         row.append(`<td class="team">${pilot.team_name || '-'}</td>`);
 
         if (display_starts) row.append(`<td class="starts">${pilot.starts}</td>`);
