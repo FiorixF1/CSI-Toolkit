@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 
-# References for 2025
-# MultiGP doc link: https://docs.google.com/document/d/1U4aL9TgKGdlz1y04VMlKoSLFip_msUySuRq6ZnWwh7k/edit?tab=t.0#heading=h.yystmlsjl1ei
-# FAI doc link: https://www.fai.org/sites/default/files/ciam/wcup_drones/sc4_vol_f9_dronesport_25_1.pdf
+# References for 2026
+# MultiGP doc link: https://docs.google.com/document/d/10eBUtlXn8cYkos_CT5hOa3BwESeHvlTWssL4ydyGzHA/edit?tab=t.0#heading=h.c7d32jvxr7wf
+# FAI doc link: https://www.fai.org/sites/default/files/2026-06/CIAM-F9-Drones-2026-06-01.pdf
 
 
 
@@ -565,10 +565,24 @@ def brackets(rhapi, race_class, args):
         races = rhapi.db.races_by_heat(heats[-1].id)
         for race_number, race in enumerate(races):
             race_result = rhapi.db.race_results(race)
+            race_format = rhapi.db.raceformat_by_id(race.format_id)
 
             if race_result:
                 heat_leaderboard = race_result[race_result['meta']['primary_leaderboard']]
                 winner_pilot_id = heat_leaderboard[0]['pilot_id']
+
+                """
+                MULTIGP AND CSI
+                7.9.2 Chase the Ace Race Format for Final
+                    An ACE is defined as a pilot winning the race AND completing the last lap through the finish gate.
+                    If no pilot completes the designated number of laps for the race, then no ace or points are awarded and iron man is disengaged.
+                    The heat is void when it comes to scoring.
+                """
+                if heat_leaderboard[0]['laps'] != race_format.number_laps_win:
+                    IS_IRON_MAN_AVAILABLE = False
+                    if args["bracket_type"] != FAI:
+                        # needed to avoid scoring
+                        continue
 
                 if race_number == 0 and IS_IRON_MAN_AVAILABLE and winner_pilot_id == tq_pilot_id:
                     # race is over (Iron Man)
